@@ -128,7 +128,7 @@ export const gm = {
     const g = gami(); rollDay(g, today()); titleCheck(g, ctx); save();
     if (lbGet().joined) setTimeout(() => void lbPush(), 4000); else if ((SYNC.get() || ACC()) && syncConf()) setTimeout(() => void lbLoad(true), 5000);
     const free = () => current.view !== "tutorial" && !current.sess && !current.run;
-    if (!h.startsWith("import=") && free() && g.loginClaimed !== today()) setTimeout(() => { if (free()) showLogin(); }, 700);
+    if (!h.startsWith("import=") && free() && g.loginClaimed !== today() && !loginShownToday()) setTimeout(() => { if (free()) { showLogin(); markLoginShown(); } }, 700);
     bump();
   }),
 };
@@ -157,6 +157,10 @@ export const act = {
   evWear: (e: EventCatalog) => safe(() => { evWear(gami(), e); save(); lbSoon(3000); ctx.fx.syncSoon(3000); closeModal(); }),
 };
 function showLogin() { const o = loginOffer(gami(), today()); if (o) openModal({ k: "login", o }); }
+// Beim Start poppt das Fenster nur einmal pro Tag von selbst auf (sonst bei jedem Neuladen); über Belohnungen bleibt es öffenbar
+const KEY_LOGIN_SHOWN = "tap2coach-login-shown";
+const loginShownToday = () => { try { return localStorage.getItem(KEY_LOGIN_SHOWN) === today(); } catch { return false; } };
+const markLoginShown = () => { try { localStorage.setItem(KEY_LOGIN_SHOWN, today()); } catch { /* privat */ } };
 
 // ---- Login-Bonus mit Konto: serverseitig (supabase/007_app_login_bonus.sql)
 // Ohne Konto bleibt er wie in der Live-App auf dem Gerät. Fehlt die Funktion auf dem Server noch (SQL nicht
