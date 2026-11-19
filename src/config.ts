@@ -20,7 +20,7 @@ export const KEYS = {
  * so beschreibt er immer genau das, was die App tatsächlich tut (Art. 13 DSGVO).
  * Beim Freischalten einer Funktion: Schalter setzen, Hinweis prüfen, docs/DATENSCHUTZ.md aktualisieren.
  */
-const SUPABASE_ON = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
+const SUPABASE_ON = Boolean(String(import.meta.env.VITE_SUPABASE_URL ?? "").trim() && String(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? "").trim());
 export const FEATURES = {
   account: SUPABASE_ON, // Anmeldung mit GitHub (Supabase Auth) – an, sobald die Build-Variablen gesetzt sind
   sync: SUPABASE_ON, // Ende-zu-Ende-verschlüsselte Sicherung/Sync im Konto

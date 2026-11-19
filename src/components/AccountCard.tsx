@@ -23,6 +23,7 @@ export function AccountCard() {
         <>
           <p className="small muted" style={{ marginTop: 4 }}>Melde dich auf jedem Gerät mit demselben GitHub-Konto an – dann hast du überall denselben Stand: Lernstand, Belohnungen und Tutor. Kein Schlüssel, kein Code. Dein bisheriger Stand auf diesem Gerät wird dabei übernommen, nichts geht verloren.</p>
           <div className="row" style={{ marginTop: 12 }}><button type="button" className="btn small primary" onClick={() => void a.signIn()}><Ic name="users" cls="ic xs" /> Mit GitHub anmelden</button></div>
+          {a.err && <p className="small warn-text" style={{ marginTop: 8 }}>{a.err}</p>}
         </>
       ) : (
         <>
