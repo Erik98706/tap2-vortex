@@ -77,7 +77,7 @@ export const useAccount = create<Store>((set, get) => ({
 
   signIn: async () => {
     if (!supabase) return;
-    const { error } = await supabase.auth.signInWithOAuth({ provider: "github", options: { redirectTo: window.location.origin + "/einstellungen" } });
+    const { error } = await supabase.auth.signInWithOAuth({ provider: "github", options: { redirectTo: window.location.origin + import.meta.env.BASE_URL + "einstellungen" } });
     if (error) set({ err: "Anmeldung fehlgeschlagen. Versuche es erneut." });
   },
   signOut: async () => {

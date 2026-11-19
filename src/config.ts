@@ -35,7 +35,7 @@ export const FEATURES = {
  * Namen ändern oder sich austragen – neue Einträge sind aber erst möglich, wenn die neue App die Live-App ersetzt.
  * So landen keine Testnamen bei den echten Nutzern. Beim Umstieg auf true setzen.
  */
-export const LB_NEW_JOINS = false;
+export const LB_NEW_JOINS = true;
 
 /** Tutor über die eigene KI (Brücke): Ergebnis-Blöcke schreibt man selbst ein – XP daher höchstens für so viele Aufgaben pro Tag. */
 export const BRIDGE_XP_TASKS_PER_DAY = 8;

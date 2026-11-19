@@ -25,7 +25,7 @@ export function qrPath(text: string) {
   for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (q.isDark(r, c)) d += `M${c} ${r}h1v1h-1z`;
   return { n, d, k: Math.max(3, Math.ceil(240 / (n + 8))) };
 }
-const base = () => location.origin + "/";
+const base = () => location.origin + import.meta.env.BASE_URL;
 
 export const useTransfer = create<{ tx: Tx; imp: Imp; build: () => Promise<void>; receive: (code: string) => Promise<void>; apply: (mode: "merge" | "replace") => void; cancel: () => void }>((set, get) => ({
   tx: null, imp: null,

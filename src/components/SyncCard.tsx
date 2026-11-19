@@ -49,7 +49,7 @@ export function SyncCard({ title = "Geräte synchronisieren" }: { title?: string
     const st = L.busy ? <span className="small muted" id="sy-st">Gleicht ab …</span> : L.err ? <span className="small warn-text" id="sy-st">{L.err}</span> : <span className="app-ok" id="sy-st"><Ic name="check" cls="ic sm" /> Verbunden{cfg.grp ? " · Gruppe " + cfg.grp : ""}{cfg.at ? " · abgeglichen " + syncTime(cfg.at) : ""}</span>;
     const p = L.pair;
     let qr: ReturnType<typeof qrPath> | null = null;
-    if (p?.code) { try { qr = qrPath(location.origin + "/#verbinden=" + p.code); } catch { qr = null; } }
+    if (p?.code) { try { qr = qrPath(location.origin + import.meta.env.BASE_URL + "#verbinden=" + p.code); } catch { qr = null; } }
     const pair = !p ? null : p.busy ? <p className="small muted">Code wird erstellt …</p> : p.err ? <p className="small warn-text">{p.err}</p>
       : (p.until ?? 0) < Date.now() ? <p className="small muted">Der Code ist abgelaufen.</p>
       : (
