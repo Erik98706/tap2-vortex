@@ -1,0 +1,8 @@
+/*
+ * Stylesheet der App = Stylesheet der Live-App (docs/PORTIERUNG.md): Schriften wie dort, main.css (Design der Live-App)
+ * und app.css (nur Ansichten, die es in der Live-App nicht gibt). Keine weiteren Grundstile – kein CSS-Reset –, damit
+ * Links, Listen, Abstände usw. genau wie in der Live-App aussehen.
+ */
+@import "./theme/fonts.css";
+@import "./theme/main.css";
+@import "./theme/app.css";

@@ -1,0 +1,228 @@
+# Architektur der neuen App (Branch `dev`, Ordner `app/`)
+
+Stand: 13.11.2026. Dieses Dokument hält fest, **was wo liegt und warum**. Bei Architekturänderungen bitte mitpflegen.
+
+## Ziel
+
+Eine **kostenlos betreibbare** Nachfolgerin der Live-App (`index.html` auf `main`), die genauso funktioniert,
+aber modular und skalierbar ist: viele Kataloge (TAP1, TAP2, Lernfelder, Klausuren, Events), getrennte Module,
+Tests, typsicherer Code. Später optional: KI-Tutor, Katalog-Bibliothek, Konten.
+
+## Grundregel: Live-App bleibt unberührt
+
+| | Live-App | Neue App |
+| --- | --- | --- |
+| Branch | `main` | `dev` |
+| Code | `index.html` (Single-File-PWA) | `app/` |
+| Hosting | GitHub Pages im eigenen Fork | öffentliche Projektseite unter `/<Repository>/`; lokaler Speicher ist von der Live-Adresse getrennt |
+| Daten | `localStorage` der Live-Adresse | `localStorage` der neuen Adresse (getrennt) |
+
+Eigene Adresse statt Unterordner auf github.io: gleiche Origin hieße gemeinsamer Speicher und Service Worker.
+Die neue App liest die Live-Inhalte nur über das Export-Skript, sie schreibt nie in `index.html`.
+
+## Stack (Entscheidung 13.11.2026)
+
+| Schicht | Wahl | Begründung |
+| --- | --- | --- |
+| Build | Vite 8, TypeScript strict | schnell, Standard, gute Fehlermeldungen |
+| UI | React 19, Stylesheet der Live-App (`src/theme/main.css`), Bausteine in `src/ui-main`, kein CSS-Framework | gleiches Aussehen wie die Live-App, kein Firmen-Branding |
+| Routing | TanStack Router, dateibasiert (`src/routes`), automatische Code-Aufteilung | typsichere Links und Suchparameter, skaliert mit vielen Seiten |
+| Zustand | Zustand (`src/store`) | klein, ohne Boilerplate, einfach testbar |
+| Inhalte | JSON-Kataloge (`src/content/generated`), Schema mit Zod (`src/content/schema.ts`) | Inhalte getrennt vom Code, Grundlage der Katalog-Bibliothek |
+| Offline | vite-plugin-pwa (Workbox, Precache) | wie die Live-App nach dem ersten Besuch offline nutzbar |
+| Tests | Vitest | Engine, Datenmodell, Kataloge |
+| Hosting | statisch über GitHub Pages | kein eigener Server; Deploy läuft über GitHub Actions |
+| Sync/Rangliste | später: Supabase Free, dasselbe verschlüsselte Protokoll wie die Live-App | optional, Lernen geht immer ohne |
+
+**Warum nicht mehr TanStack Start + Cloudflare Workers (Phase 0)?** Der Server war für den KI-Tutor da (Login,
+Server-Funktionen, Datenbank-Tabellen). Für eine kostenlose Version ohne KI ist ein Server unnötig, macht Offline
+schwerer und verursacht Kosten bei vielen Nutzern. Der Tutor-Code liegt in der Git-Historie (Commit `2909805`)
+und kommt in Phase 3 als **eigenes Modul** zurück (eigener Worker mit Freigabeliste, siehe unten).
+
+## Aufbau
+
+```
+app/
+├─ index.html                     Einstieg (Vite)
+├─ public/_headers                Sicherheits-Header + CSP für Hosts, die _headers unterstützen (nicht GitHub Pages)
+├─ scripts/export-legacy-catalog.mjs   ../index.html → src/content/generated/*.json (nur lesen)
+├─ src/
+│  ├─ main.tsx                    Router starten
+│  ├─ config.ts                   Prüfungsdatum, Speicher-Schlüssel
+│  ├─ routes/                     Seiten (eine Datei = eine Route); routeTree.gen.ts wird erzeugt
+│  ├─ content/
+│  │  ├─ schema.ts                Katalog-Format (Zod)
+│  │  ├─ catalog.ts               Zugriff: Themen, Fragen, Abbildungen, Events
+│  │  ├─ catalog.test.ts          Prüft Format, eindeutige IDs, ID-Schema der Live-App
+│  │  └─ generated/               Exportierte Kataloge (eingecheckt, nicht von Hand ändern)
+│  ├─ lib/
+│  │  ├─ state.ts (+test)         Lernstand-Format = Live-App v7, Migration, Absicherung von Fremddaten
+│  │  ├─ srs.ts (+test)           Wiederholungs-Engine (Leitner) und Runden-Logik wie in der Live-App
+│  │  ├─ lernen.ts, plan.ts (+test) Runden zusammenstellen, „Als Nächstes“, Lernplan
+│  │  ├─ search.ts, sql.ts (+test) Suche über alle Fragen, SQL ausführen und vergleichen
+│  │  ├─ editor.ts                Code-Editor (CodeMirror), nur bei Bedarf geladen
+│  │  └─ dates.ts, utils.ts
+│  ├─ store/progress.ts           Lernstand + laufende Runde (localStorage, mehrere Tabs)
+│  ├─ ui/                         UI-Baukasten
+│  └─ theme/                      Tokens, Schriften, Abbildungs-Styles
+```
+
+## Datenmodell und Kompatibilität
+
+- Der Lernstand hat **exakt das Format der Live-App** (Version 7, Schlüssel `tap2coach`). Folgen:
+  - Sicherungsdateien der Live-App lassen sich hier laden (Einstellungen → Sicherung laden) und umgekehrt.
+  - Später kann derselbe Sync genutzt und die Live-App ohne Datenverlust ersetzt werden.
+- **Frage-IDs sind heilig:** `m<i>`, `k:<deck><i>` (ab 0), `o<i>`, `ev:<event>:<frage>`. `catalog.test.ts` prüft das.
+  Achtung: Die frühere `tap2.json` aus learnlab zählte Karten ab 1 und war deshalb nicht kompatibel. Sie ist ersetzt.
+- Alles von außen (Sicherung, später Link/Sync) läuft durch `normalize()`: Typen werden erzwungen, echte Daten
+  bleiben unverändert (Test: „lässt einen echten Lernstand exakt unverändert“).
+
+## Inhalte und Katalog-Bibliothek
+
+- Quelle der Inhalte ist vorerst die Live-App. `npm run catalog:export` erzeugt die Kataloge neu,
+  `npm run catalog:check` (Teil von `npm run build`) bricht ab, wenn sie nicht mehr zur `index.html` passen.
+- `src/content/generated/index.json` ist das Katalog-Verzeichnis (Grundlage der späteren Bibliothek mit Suche/Filter).
+- Events: `enabled: false` blendet einen Katalog aus. **WPF PM ist deaktiviert** (Schalter im Export-Skript).
+- Abbildungen (UML, Netzplan, Gantt …) sind fertige SVGs aus dem eigenen Katalog und werden direkt eingefügt.
+  Sie stammen nie aus Nutzerdaten.
+- **SoWi nur Multiple Choice (nur neue App, 16.11.2026):** In der Prüfung ist SoWi reines Multiple Choice. Darum
+  zeigt die Lernrunde SoWi-Karteikarten als Auswahlfrage. Die falschen Antworten (je drei, fachlich plausibel) und
+  die auf gleiche Länge gekürzte richtige Option stehen in `src/content/sowi-mc/` – eigene Inhalte, nicht aus dem
+  Export. Umwandlung in `src/lib/sowi-mc.ts`; Frage-IDs und Lernstand bleiben gleich. Tests prüfen Abdeckung aller
+  SoWi-Karten und dass die Länge die Lösung nicht verrät.
+- **FIAE/FISI-Bereichswahl (18.11.2026):** FIAE bleibt der Standardkatalog aus dem Live-Export. FISI liegt als
+  eigenständig formulierter Katalog mit über 400 Fragen in `src/content/fisi.json` und `src/content/fisi-bank.ts`.
+  Die Netzberechnungen werden aus festen Datensätzen abgeleitet; Originalprüfungen und Lösungshinweise aus den
+  bereitgestellten PDFs werden nicht veröffentlicht. `src/store/learning-area.ts` speichert die Auswahl lokal unter
+  `tap2coach-bereich`. Der Fortschritt bleibt im kompatiblen Lernstand `tap2coach`; FISI-Fragen verwenden den eigenen
+  ID-Namensraum `fisi:`. Übersicht, Lernen, Suche und Lernplan folgen der Auswahl. FISI-Aufgaben, Prüfungssimulationen,
+  Events und Tutor sind noch nicht portiert und werden nicht mit FIAE-Inhalten aufgefüllt.
+- **Prüfungstermin:** Auswahl Winter 2026/27 (25.11.2026), Sommer 2027 (28.04.2027) oder individuelles Einladungsdatum.
+  Lokal gespeichert unter `tap2coach-pruefungstermin`; Countdown, Lernplan und Tutor-Lehrplan verwenden denselben Wert.
+  Schriftliche Termine folgen AkA/IHK-IT-Terminen; Projekt- und Fachgesprächsdaten bleiben individuell.
+
+## Portierung aus der Live-App
+
+| Bereich | Live | Neu | Hinweis |
+| --- | --- | --- | --- |
+| Übersicht (Countdown, Reife je Teil, Lernplan heute, Gezielt üben) | ✓ | ✓ | 1:1 (PORTIERUNG.md) |
+| Lernen: Themen, Runden (20 Fragen, Einstreuen), Fällig/Fehler/Markiert/Zufall, Mehrfachauswahl | ✓ | ✓ | |
+| Theorie aus Lernpaketen | ✓ | ✓ | 1:1 inkl. Timer, Notation, Ziele |
+| Abbildungen in Antworten | ✓ | ✓ | |
+| Sicherung laden/speichern (gleiches Format) | ✓ | ✓ | inkl. Rücklage des alten Stands |
+| Offline/PWA, Hinweis „Neue Version“ | ✓ | ✓ | |
+| Suche | ✓ | ✓ | `lib/search.ts` |
+| Eigene Karten anlegen/löschen | ✓ | ✓ | Löschen mit Sync-Ereignis |
+| SQL-Karten ausführen (sql.js, Vergleich mit Musterlösung), Code-Editor | ✓ | ✓ | `lib/sql.ts`, `lib/editor.ts`, eigene Chunks |
+| Aufgaben (20 Übungsaufgaben, Timer, Punkte, Fehlerursachen) | ✓ | ✓ | `lib/aufgaben.ts`, 1:1 (PORTIERUNG.md) |
+| Prüfung (Simulation, Real-Klausur, Noten, „Bereit für eine 1“) | ✓ | ✓ | `lib/pruefung.ts`, `store/pruefung.ts`, 1:1 (PORTIERUNG.md) |
+| Tipps, Operator-Trainer, Lernplan, Tutorial | ✓ | ✓ | `lib/tipps.ts`, Operator-Daten im Katalog, 1:1 (PORTIERUNG.md) |
+| Events (LF11a) | ✓ | ✓ | `lib/events.ts`, Belohnung über `store/gami.ts`, 1:1 (PORTIERUNG.md) |
+| Belohnungen (XP, Level, Quests, Kalender, Tiere, Skins, Titel) | ✓ | ✓ | `lib/gami/`, `store/gami.ts`, Format `tap2coach-gami` unverändert, Golden-Tests gegen das Original (PORTIERUNG.md) |
+| Rangliste, Geräte-Sync | ✓ | ✓ | `tap2_lb` bzw. `tap2_sync`, gleiches Protokoll und gleiche IDs |
+| Übertragen per Link/QR | ✓ | ✓ | `lib/transfer.ts`, gleiches Format (PORTIERUNG.md, Einstellungen) |
+| Patch Notes, Hell/Dunkel | ✓ | ✓ | `lib/patchnotes.ts`, `lib/theme.ts` (`tap2coach-theme`) |
+
+Jeder Bereich ist ein eigenes Modul (Route + Logik in `lib/` + Tests) und kann unabhängig portiert werden.
+
+## Entscheidungen vom 13.11.2026 (Abend)
+
+- **Design und Bedienung exakt wie die Live-App.** Das Stylesheet der Live-App wird zum Design-System der neuen App,
+  die React-Komponenten erzeugen dasselbe Markup (gleiche Klassen). Einzige Änderung: Die Tintenfarbe `#08312A`
+  der Live-App (Boehringer-Markenfarbe) wird durch einen neutralen Ton ersetzt (Standard: `#172033`, eine Zeile in
+  den Tokens). Der frühere eigene UI-Baukasten (`src/ui`, Tailwind) ist seit 14.11.2026 vollständig ersetzt.
+- **Gamification/Gacha vollständig** als eigenes Modul (`tap2coach-gami`, gleiches Format).
+- **Optionales Konto mit GitHub** (Supabase, Frankfurt) für Sicherung, Sync und Rangliste – Lernen ohne Konto bleibt.
+- **Datenschutz:** Rangliste nur mit selbst gewähltem Benutzernamen und Einwilligung. Details: `docs/DATENSCHUTZ.md`.
+
+## Synchronisieren: zwei Wege (14.11.2026)
+
+- **Mit Konto** (`store/account.ts`, `supabase/001_app_sync.sql`): „ein Konto, ein Stand“.
+  - Der GitHub-Login reicht. Lernstand und Belohnungen liegen als JSON im Konto (RLS, nur eigene Zeile), **nicht** E2E.
+  - Abgleich über `lib/konto-sync.ts` (holen → zusammenführen → schreiben mit Versionsprüfung).
+  - Stände ohne Konto lassen sich per Kurzcode oder Schlüssel übernehmen.
+- **Ohne Konto** (`store/livesync.ts`, `tap2_sync` der Live-App): Geräte per Kurzcode/QR koppeln, E2E-verschlüsselt.
+  Das ist auch die Brücke zur Live-App.
+- „Auf anderes Gerät übertragen“ (Link/QR ohne Server) ist in der Dev-App entfallen; empfangene Links funktionieren
+  weiter.
+- **Rangliste:** Mit Konto gehört der Eintrag zum Konto (ID = sha256 der Nutzer-ID, `lib/gami/lb.ts`) und ist auf allen
+  angemeldeten Geräten derselbe. Beim Anmelden zieht ein bestehender Eintrag mit seinem Namen auf die Konto-ID um;
+  beim Abmelden bleibt er beim Konto. Ohne Konto gilt die Regel der Live-App (Sync-Schlüssel bzw. Gerät).
+- **Logo:** Vortex-Wirbel (`public/icons/vortex.svg`; daraus `favicon.png`, `icon-192/512.png`, `apple-touch-icon.png`)
+  ersetzt in der Dev-App den Raben (Markenzeichen, Tutorial, Menü-Icon und Avatar des Tutors).
+- **Pseudocode mit Python/JavaScript** (15.11.2026, nur Dev-App): Zu den Pseudocode-Beispielen (Lernpakete, Code-Karten,
+  Fragetexte, Musterlösungen der Aufgaben, Erwartungshorizonte) gibt es Python- und JavaScript-Fassungen in
+  `src/content/code-variants.json`. Zugeordnet wird über eine Prüfsumme des Pseudocode-Texts (`lib/code-variants.ts`).
+  `components/CodeVariants.tsx` zeigt oben die Sprache (Umschalter, gemerkt in `tap2coach-codesprache`) und darunter den
+  Pseudocode. Ändert die Live-App einen Block, erscheint nur noch der Pseudocode; `code-variants.test.ts` meldet die
+  veraltete Fassung. Die Inhalte selbst bleiben in der Live-App (Pseudocode wie in der IHK-Prüfung).
+  - Reiter „Zeile für Zeile“: je Pseudocode-Zeile eine kurze Erklärung (`erklaerung` in derselben Datei, Zeilenzahl
+    per Test geprüft).
+  - Reiter „Ablauf“ für Sortier- und Suchverfahren (Bubble, Selection, Insertion, binäre und lineare Suche, Maximum):
+    `lib/code-visual.ts` simuliert die Schritte rein und deterministisch. Die aktiven Pseudocode-Zeilen werden über
+    Muster gefunden. Die Anzeige hat Balken, Variablen, Vor/Zurück/Abspielen und „Neue Zahlen“.
+- **Normalisierung visuell** (15.11.2026, nur Dev-App): Beispiele in `src/content/normalisierung.json` (Zod-Schema
+  `NormBeispiel` in `content/schema.ts`), zugeordnet über Katalog-IDs: Aufgabe `D2`, offene Frage `o83`, Karten
+  `k:db0`–`k:db2`, MC `m84`/`m85`, Lernpaket-Abschnitt `P04:Normalformen`. `components/NormVisual.tsx` legt Reiter über die
+  bisherige Musterlösung: „Schritt für Schritt“ (Ausgang → 1./2./3. NF, PK/FK markiert, verschobene, umbenannte und neue
+  Spalten hervorgehoben), „Abhängigkeiten“ (Pfeil-Diagramm), „Ergebnis“ (Tabellen mit Beziehungen) und „Musterlösung“.
+  `TextMitTabellen` zeigt „a | b“-Zeilen in Aufgabentexten als Tabelle. `lib/normalisierung.ts` prüft jedes Beispiel
+  (Schlüssel, Fremdschlüssel, kein Attribut verloren, Beispieldaten); `normalisierung.test.ts` gleicht die letzte Stufe
+  mit den Relationen der Text-Musterlösung ab. Ändert die Live-App den Text, meldet der Test die Abweichung.
+- **Beziehungen visuell** (15.11.2026, nur Dev-App): Beispiele in `src/content/beziehungen.json` (Zod-Schema
+  `BezBeispiel` in `content/schema.ts`), zugeordnet über Katalog-IDs: MC `m87`, `m88`, `m94`, `m213`, `m214`, Karten
+  `k:db7`–`k:db10`, `k:db17`, `k:sql19`, Lernpaket-Abschnitte `P04:m:n-Beziehungen auflösen`, `G03:Kardinalitäten lesen`,
+  `G03:Krähenfuß-Notation`. `components/BezVisual.tsx`: `BezVorher` zeigt in der Lernrunde unter der Frage ein neutrales
+  Beziehungsbild (zwei Entitäten, Kardinalitäten bzw. Krähenfuß, noch ohne Fremdschlüssel; „?“, wenn die Kardinalität
+  gefragt ist) und deckt es nach der Antwort auf. `BezLoesung` zeigt in der Erklärung das Relationenmodell als
+  Mini-Tabellen mit PK/FK/UNIQUE und Pfeil FK → PK, bei referentieller Integrität mit Beispieldaten und abgelehntem
+  INSERT/DELETE. SVG aus Daten, Geometrie rein in `lib/beziehungen.ts` (Monoschrift, keine DOM-Messung); ist der Platz zu
+  schmal (z. B. 375 px), stehen die Kästen untereinander. `pruefeBez` prüft jedes Beispiel (Schlüssel, FK-Seite passt zum
+  Bild, Zwischentabelle bei m:n, UNIQUE bei 1:1, Beispieldaten, Verstoß wirklich gegeben); die Tests gleichen Tabellen,
+  Schlüssel und „Tabelle.Spalte“ mit Erklärung bzw. Musterlösung ab.
+- **Name:** Die Dev-App heißt „Vortex“ (Seitenleiste, Fenstertitel, PWA-Manifest, Fußzeile). Der KI-Tutor darin heißt
+  „Tutor“ bzw. „Tutor Pro“. Texte, die 1:1 aus der Live-App stammen („Coach“), sind unverändert.
+- **KI-Tutor als Premium-Funktion**, vorerst nur für den Admin (`app_metadata.role = 'admin'`), für andere unsichtbar,
+  umgesetzt als Supabase Edge Function. Bezahl-Option später.
+
+## KI-Prüfungstutor (14.11.2026)
+
+Server und Browser teilen sich die Arbeit so (Details: `docs/TUTOR.md`):
+
+- **Edge Function `tutor`** (einziger Server-Code): Login + Admin-Rolle, Tageslimit, Anweisungen und das einzige
+  Werkzeug `pruefer_runde` (festes Schema, strict). Der Browser kann weder Anweisungen noch Werkzeuge mitschicken.
+- **Browser, reine Logik in `lib/`:**
+  - `tutor-schema.ts` prüft jede Runde (Zod, Fremdtext),
+  - `tutor-session.ts` macht daraus Aufgaben, Bewertungen und Belege,
+  - `graph.ts` (`buildConceptGraph`) berechnet den Stand je Konzept,
+  - `lehrplan.ts` berechnet den Lehrplan deterministisch,
+  - `tutor-state.ts` hält den Tutor-Stand mit Merge-Regel,
+  - `tutor-sync.ts` gleicht über das Konto ab (`app_tutor_state`, Login reicht; `konto-sync.ts`).
+- **XP:** Eine bewertete Aufgabe zählt wie eine normale Antwort (`gm.answer`, Combo, Serie, Quests, keine Obergrenze). Damit ist sie kompatibel mit Sync und Rangliste der Live-App
+  (`gami/tutor-xp.test.ts` gegen das Original).
+- **Speicher:**
+
+  | Was | Wo |
+  | --- | --- |
+  | Tutor-Stand | `tap2coach-tutor-stand`, im Konto über `app_tutor_state`, **nicht** in `tap2_sync` |
+  | Sitzung | `tap2coach-tutor-sitzung`, nur dieses Gerät |
+  | Modell | `tap2coach-tutor-modell` |
+  | Geräte-ID für XP je Gerät | `tap2coach-tutor-geraet` |
+
+## Phasenplan
+
+| Phase | Inhalt | Stand |
+| --- | --- | --- |
+| 0 | Gerüst aus learnlab, eigenes Design, Katalogformat | erledigt, Stack am 13.11. auf statische PWA umgestellt |
+| 1a | Design der Live-App übernehmen, Datenschutzhinweis | erledigt (14.11.: Grundgerüst ohne Tailwind, PORTIERUNG.md) |
+| 1b | Funktionsgleichheit inkl. Gamification/Gacha (Tabelle oben) | erledigt (alle Module 1:1, PORTIERUNG.md) |
+| 1c | Konto (GitHub, ein Stand pro Konto), Geräte-Sync ohne Konto, Rangliste mit Benutzername, Konto löschen | Konto-Sync fertig (14.11., SQL 001 einspielen); Rangliste und Konto löschen offen |
+| 2 | Katalog-Bibliothek (Suche/Filter, mehrere Kataloge), TAP1, Lehrjahr → Lernfeld, Klausurkalender | offen |
+| 3 | KI-Prüfungstutor (Premium, nur Admin): Sitzung je Thema im IHK-Stil, Konzept-Graph, deterministischer Lehrplan, Tutor-Stand im Konto, XP – `docs/TUTOR.md` | fertig (14.11., Function deployt; SQL 004 einspielen) |
+| 4 | Neue App ersetzt die Live-App (gleiche Origin, Lernstände bleiben) | offen |
+
+## Sicherheit
+
+- Keine Server-Logik, keine Geheimnisse im Frontend. Sicherheits-Header und CSP in `public/_headers`.
+- Fremddaten nur über `normalize()`. React escaped alle Texte; HTML wird nur für eigene Katalog-Abbildungen eingefügt.
+- Checkliste für Supabase (sobald Sync/Rangliste portiert sind): `docs/ENTWICKLUNG.md` → „Sicherheit“.

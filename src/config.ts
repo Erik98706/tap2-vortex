@@ -1,0 +1,59 @@
+/** Zentrale Prüfungstermine; der Standard bleibt mit der Live-App kompatibel. */
+export const EXAM_DAY = "2026-11-25"; // TAP2 Winter 2026/27 – gleich wie in der Live-App
+export const EXAM_DE = EXAM_DAY.split("-").reverse().join(".");
+export const EXAM_TERMS = [
+  { id: "winter-2026-27", label: "Winter 2026/27 · schriftlich 25.11.2026", date: "2026-11-25" },
+  { id: "summer-2027", label: "Sommer 2027 · schriftlich 28.04.2027", date: "2027-04-28" },
+] as const;
+export type ExamTermId = (typeof EXAM_TERMS)[number]["id"] | "custom";
+export const DEFAULT_EXAM_TERM: ExamTermId = "winter-2026-27";
+
+/** localStorage-Schlüssel – identisch mit der Live-App, damit Sicherungen und später Sync kompatibel sind. */
+export const KEYS = {
+  state: "tap2coach",
+  session: "tap2coach-sess",
+  beforeImport: "tap2coach-vor-import",
+} as const;
+
+/**
+ * Funktionsschalter. Der Datenschutzhinweis (/datenschutz) zeigt nur die Abschnitte aktiver Funktionen –
+ * so beschreibt er immer genau das, was die App tatsächlich tut (Art. 13 DSGVO).
+ * Beim Freischalten einer Funktion: Schalter setzen, Hinweis prüfen, docs/DATENSCHUTZ.md aktualisieren.
+ */
+const SUPABASE_ON = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
+export const FEATURES = {
+  account: SUPABASE_ON, // Anmeldung mit GitHub (Supabase Auth) – an, sobald die Build-Variablen gesetzt sind
+  sync: SUPABASE_ON, // Ende-zu-Ende-verschlüsselte Sicherung/Sync im Konto
+  leaderboard: SUPABASE_ON, // Rangliste mit selbst gewähltem Benutzernamen (freiwillig) – dieselbe Bestenliste wie die Live-App
+  patchNotes: true, // Release-Liste von der GitHub-API (Seite Patch Notes, portiert 14.11.2026)
+  tutor: false, // Tutor Pro (eingebaute KI, Anthropic) – nur für freigeschaltete Konten (Admin); Tutor (Brücke) ist immer an
+} as const;
+
+/**
+ * Rangliste in der Testphase der neuen App (Dev-Seite, Demo-Tester): Die Bestenliste ist dieselbe wie in der Live-App.
+ * Wer schon eingetragen ist (über die Live-App oder ein verbundenes Gerät), wird weiter aktualisiert und kann den
+ * Namen ändern oder sich austragen – neue Einträge sind aber erst möglich, wenn die neue App die Live-App ersetzt.
+ * So landen keine Testnamen bei den echten Nutzern. Beim Umstieg auf true setzen.
+ */
+export const LB_NEW_JOINS = false;
+
+/** Tutor über die eigene KI (Brücke): Ergebnis-Blöcke schreibt man selbst ein – XP daher höchstens für so viele Aufgaben pro Tag. */
+export const BRIDGE_XP_TASKS_PER_DAY = 8;
+
+/**
+ * Verantwortlicher nach Art. 4 Nr. 7 DSGVO – Pflichtangabe im Datenschutzhinweis.
+ * Kontakt bewusst über das GitHub-Profil (keine Firmenadresse). Kommt später eine eigene E-Mail dazu, hier ergänzen.
+ */
+export const CONTROLLER = {
+  name: "Erik Numsen",
+  contact: "über GitHub: github.com/Erik98706",
+} as const;
+
+/** Stand des Datenschutzhinweises – bei jeder inhaltlichen Änderung anpassen. */
+export const PRIVACY_VERSION = "2026-11-19";
+
+/**
+ * Kostenloser Tutor: Anbieter der Gratis-Stufe (Server-Secrets FREE_AI_URL/FREE_AI_KEY/FREE_AI_MODEL in der Edge Function).
+ * Wird in der Einwilligung und im Datenschutzhinweis genannt – bei einem Wechsel des Anbieters hier mit anpassen.
+ */
+export const FREE_AI = { provider: "Groq, Inc. (USA)", consentVersion: "2026-11-15" } as const;
