@@ -3,7 +3,7 @@
  * Regeln wie in der Live-App (evKapQ, evOn, evSure, evReady, learnEv, learnEvFinal, evStatus, Abschlusstest).
  * Die Belohnung selbst vergibt das Belohnungs-Modul (store/gami.ts: gm.evFinal, gm.evKap).
  */
-import { EVENTS } from "@/content/catalog";
+import { EVENTS, type LearningArea } from "@/content/catalog";
 import type { EventCatalog, Question } from "@/content/schema";
 import { daysBetween, shuffle, today } from "./dates";
 import type { Plan } from "./lernen";
@@ -13,6 +13,9 @@ import type { State } from "./state";
 type Kap = EventCatalog["kapitel"][number];
 export const EV_FINAL = 15;
 export const evById = (id: string | undefined) => (id ? EVENTS.find((e) => e.id === id) : undefined);
+/** Bereich je Event; ohne Eintrag gehört es zu FIAE (neue FISI-Events hier mit ["fisi"] eintragen). */
+const EV_AREA: Record<string, LearningArea[]> = {};
+export const eventsFor = (area: LearningArea) => EVENTS.filter((e) => (EV_AREA[e.id] ?? ["fiae"]).includes(area));
 export const evKapQ = (_e: EventCatalog, k: Kap): Question[] => k.items;
 export const evAllQ = (e: EventCatalog) => e.kapitel.flatMap((k) => evKapQ(e, k));
 export const evLeft = (e: EventCatalog, day = today()) => daysBetween(day, e.ende);

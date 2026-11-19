@@ -11,8 +11,7 @@ import { useRegisterSW } from "virtual:pwa-register/react";
 import { allQ, type LearningArea } from "@/content/catalog";
 import { daysBetween, today } from "@/lib/dates";
 import { counts } from "@/lib/srs";
-import { EVENTS } from "@/content/catalog";
-import { evOn } from "@/lib/events";
+import { evOn, eventsFor } from "@/lib/events";
 import { gm, setGamiContext, useGami } from "@/store/gami";
 import { HudPill } from "@/components/gami/Hud";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -87,7 +86,7 @@ function Shell() {
     <div className="app" onClick={go}>
       <nav className="side" aria-label="Hauptnavigation">
         <div className="brand"><img className="brand-mark" src={`${import.meta.env.BASE_URL}icons/vortex.svg`} alt="" /><div className="brand-t">Vortex</div></div>
-        {NAV_MAIN.filter((n) => area === "fiae" || n.view !== "events").map((n) => <NavBtn key={n.view} n={n} current={navView === n.view} />)}
+        {NAV_MAIN.map((n) => <NavBtn key={n.view} n={n} current={navView === n.view} />)}
         {/* Tutor vorerst nur für das freigeschaltete Konto (Claude) – für alle anderen unsichtbar */}
         {tutorOn && area === "fiae" && <NavBtn n={TUTOR_NAV} current={navView === "tutor"} />}
         <div className="side-foot">{NAV_FOOT.map((n) => <NavBtn key={n.view} n={n} current={navView === n.view} />)}</div>
@@ -127,13 +126,14 @@ function Foot() {
 // Link setzt bei aktiver Route selbst aria-current="page" – nur bei exakt gleichem Pfad, sonst gilt unsere Markierung
 // (z. B. während einer Event-Runde unter /lernen/runde nur „Events“, wie die Live-App)
 function NavBtn({ n, current }: { n: { view: string; svg: string; label: string }; current: boolean }) {
+  const area = useLearningArea((s) => s.area);
   return (
     <Link to={PATH[n.view] ?? "/"} className="nav-i" data-view={n.view} aria-current={current ? "page" : "false"} activeOptions={{ exact: true, includeSearch: false }}>
       {/* Icon-Pfade aus dem Markup der Live-App (generiert, ui-main/nav.ts) */}
       <svg className="ic" viewBox="0 0 24 24" aria-hidden="true" dangerouslySetInnerHTML={{ __html: n.svg }} />
       <span>{n.label}</span>
       {/* Roter Punkt bei Events mit noch offener Belohnung (wie die Live-App) */}
-      {n.view === "events" && <i className="nav-dot" aria-hidden="true" hidden={!EVENTS.some((e) => evOn(e) && !gm.evInfo(e).got)} />}
+      {n.view === "events" && <i className="nav-dot" aria-hidden="true" hidden={!eventsFor(area).some((e) => evOn(e) && !gm.evInfo(e).got)} />}
     </Link>
   );
 }

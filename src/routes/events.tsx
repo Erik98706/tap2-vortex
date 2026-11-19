@@ -8,9 +8,9 @@
 import { useEffect, useRef } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
-import { EVENTS, figFor } from "@/content/catalog";
+import { figFor } from "@/content/catalog";
 import type { EventCatalog } from "@/content/schema";
-import { EV_FINAL, evAllQ, evById, evDate, evKapQ, evOn, evReady, evStatusTxt, evSure, learnEv, learnEvFinal, type EvInfo } from "@/lib/events";
+import { EV_FINAL, evAllQ, evById, evDate, evKapQ, evOn, evReady, evStatusTxt, evSure, eventsFor, learnEv, learnEvFinal, type EvInfo } from "@/lib/events";
 import { counts } from "@/lib/srs";
 import { gm, useGami } from "@/store/gami";
 import { EvPreview } from "@/components/gami/Hud";
@@ -28,19 +28,19 @@ const Reward = ({ e }: { e: EventCatalog }) => <div className="ev-rw"><EvPreview
 const info = (e: EventCatalog): EvInfo => gm.evInfo(e);
 
 function Events() {
-  const { ev } = Route.useSearch(), e = evById(ev);
-  const area = useLearningArea((s) => s.area);
+  const { ev } = Route.useSearch();
+  const area = useLearningArea((s) => s.area), list = eventsFor(area), e = evById(ev);
   useGami((t) => t.n);
-  if (area === "fisi") return <section className="card"><h2>Events</h2><p className="muted">Die vorhandenen Events gehören zum Bereich Anwendungsentwicklung. Für Systemintegration sind noch keine eigenen Events hinterlegt.</p></section>;
-  return e ? <EventPage key={e.id} e={e} /> : <EventList />;
+  return e && list.includes(e) ? <EventPage key={e.id} e={e} /> : <EventList list={list} />;
 }
 
-function EventList() {
+function EventList({ list }: { list: EventCatalog[] }) {
   const S = useProgress((s) => s.S), navigate = useNavigate();
   return (
     <>
       <section className="card"><h2>Events</h2><p className="muted">Lernaktionen für eure Klausuren: eigene Fragenkataloge mit Kurz-Lektionen und eine Sonderbelohnung, die es nur bis zum Klausurtermin gibt. Events zählen nicht zu deiner Prüfungsreife, geben aber ganz normal XP.</p></section>
-      {EVENTS.map((x) => {
+      {!list.length && <section className="card"><h3>Gerade kein Event</h3><p className="muted">Für diesen Lernbereich läuft aktuell kein Event. Schau später wieder vorbei, neue Events erscheinen hier automatisch.</p></section>}
+      {list.map((x) => {
         const qs = evAllQ(x), c = counts(S, qs), inf = info(x), txt = evStatusTxt(x, inf);
         return (
           <section key={x.id} className={`card ev-card ${evOn(x) || inf.got ? "" : "ev-over"}`}><Reward e={x} /><div className="ev-main"><span className="ev-kick">{x.kurz} · {txt}</span><h3>{x.titel}</h3><p className="small muted">{x.sub} · {x.kapitel.length} Kapitel · {qs.length} Fragen</p><AmpBar c={c} /><p className="small"><b>Belohnung:</b> {x.reward.name}{inf.got ? " ✓" : evOn(x) ? ` · nur bis ${evDate(x.ende)}` : " · nicht mehr erhältlich"}</p>
