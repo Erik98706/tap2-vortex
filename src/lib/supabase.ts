@@ -15,8 +15,9 @@ export const isLocalHost = typeof location !== "undefined" && /^(localhost|127\.
 const okUrl = (u: unknown): u is string => typeof u === "string" && /^https:\/\/[a-z0-9]+\.supabase\.co$/.test(u);
 const okKey = (k: unknown): k is string => typeof k === "string" && k.length >= 20 && !k.startsWith("sb_secret");
 
-const envUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const envKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
+// Zeilenumbruch/Leerzeichen/Schrägstrich am Ende (beim Kopieren in die Build-Variable üblich) würden die Prüfung okUrl sonst scheitern lassen
+const envUrl = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.trim().replace(/\/+$/, "");
+const envKey = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined)?.trim();
 /** Lokal hinterlegter Testzugang (nur localhost, nur wenn keine Build-Variablen gesetzt sind) */
 function devConf(): { url: string; key: string } | null {
   if (envUrl || !isLocalHost) return null;

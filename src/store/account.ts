@@ -76,7 +76,7 @@ export const useAccount = create<Store>((set, get) => ({
   user: null, ready: !supabase, busy: false, err: "", lastSync: null, imp: null,
 
   signIn: async () => {
-    if (!supabase) return;
+    if (!supabase) { set({ err: "Die Server-Verbindung ist nicht richtig eingerichtet (URL oder Schlüssel ungültig)." }); return; }
     const { error } = await supabase.auth.signInWithOAuth({ provider: "github", options: { redirectTo: window.location.origin + import.meta.env.BASE_URL + "einstellungen" } });
     if (error) set({ err: "Anmeldung fehlgeschlagen. Versuche es erneut." });
   },
