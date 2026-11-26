@@ -12,8 +12,11 @@ import { TAP2, TP } from "@/content/catalog";
 import type { Aufgabe } from "@/content/schema";
 import { UE, UEB, UEB_TOPIC, reportUrlUeb, uebGroups } from "@/lib/aufgaben";
 import { fmtDay } from "@/lib/dates";
+import { fisiUE } from "@/lib/fisi-pruefung";
 import { dec, tcolOf } from "@/lib/lernen";
+import { FISI_UEB } from "@/content/fisi/aufgaben";
 import { useProgress } from "@/store/progress";
+import { useFisi } from "@/store/fisi-lernen";
 import { useLearningArea } from "@/store/learning-area";
 import { tmState, useTimer } from "@/store/timer";
 import { Ic } from "@/ui-main";
@@ -28,10 +31,9 @@ const search = z.object({ u: z.string().optional().catch(undefined) }); // fehle
 export const Route = createFileRoute("/aufgaben")({ validateSearch: search, component: Aufgaben });
 
 function Aufgaben() {
-  const { u } = Route.useSearch(), area = useLearningArea((s) => s.area);
-  if (area === "fisi") return <section className="card"><h2>FISI-Übungsaufgaben</h2><p className="muted">Für Systemintegration sind noch keine eigenständigen größeren Übungsaufgaben hinterlegt. Die verfügbaren FISI-Fragen findest du unter „Lernen“.</p></section>;
-  if (u && UE[u]) return <UebPage key={u} u={UE[u]} />;
-  return <UebList />;
+  const { u } = Route.useSearch(), fisi = useLearningArea((s) => s.area) === "fisi";
+  if (u && (fisi ? fisiUE : UE)[u]) return <UebPage key={u} u={(fisi ? fisiUE : UE)[u]} fisi={fisi} />;
+  return <UebList fisi={fisi} />;
 }
 
 /** Aufgabe öffnen (data-u in der Live-App) */
@@ -40,27 +42,29 @@ function useOpenUeb() {
   return (id: string) => { void navigate({ to: "/aufgaben", search: { u: id } }); window.scrollTo({ top: 0 }); };
 }
 
-function UebList() {
-  const ueb = useProgress((s) => s.S.ueb), open = useOpenUeb();
-  const done = UEB.filter((u) => ueb[u.id]).length;
+function UebList({ fisi }: { fisi: boolean }) {
+  const ueb = useProgress((s) => s.S.ueb), fueb = useFisi((s) => s.F.ueb), open = useOpenUeb();
+  const list = fisi ? FISI_UEB : UEB, rec = fisi ? fueb : ueb;
+  const done = list.filter((u) => rec[u.id]).length;
   return (
     <>
-      <div className="row" style={{ alignItems: "flex-end" }}><p className="lead" style={{ flex: 1, minWidth: 260 }}>Große Aufgaben im Stil der IHK-Prüfung mit Musterlösung, so wie sie in Planen und Algorithmen drankommen. Löse sie auf Papier, vergleiche mit der Lösung und trage deine Punkte ein. Unter 70 % lohnt sich ein zweiter Versuch.</p><span className="chip">{done} von {UEB.length} bearbeitet</span></div>
-      {uebGroups().map(([g, l]) => (
-        <div key={g} className="ueb-group"><h3>{g}</h3><div className="ueb-list">{l.map((x) => <UebItem key={x.id} id={x.id} onOpen={open} />)}</div></div>
+      <div className="row" style={{ alignItems: "flex-end" }}><p className="lead" style={{ flex: 1, minWidth: 260 }}>{fisi ? "Große Szenario-Aufgaben im Stil der IHK-Prüfung mit Musterlösung und Erwartungshorizont, wie sie in Konzeption und Administration sowie in Netzwerke drankommen. Löse sie auf Papier, vergleiche mit der Lösung und trage deine Punkte ein. Unter 70 % lohnt sich ein zweiter Versuch." : "Große Aufgaben im Stil der IHK-Prüfung mit Musterlösung, so wie sie in Planen und Algorithmen drankommen. Löse sie auf Papier, vergleiche mit der Lösung und trage deine Punkte ein. Unter 70 % lohnt sich ein zweiter Versuch."}</p><span className="chip">{done} von {list.length} bearbeitet</span></div>
+      {uebGroups(list).map(([g, l]) => (
+        <div key={g} className="ueb-group"><h3>{g}</h3><div className="ueb-list">{l.map((x) => <UebItem key={x.id} id={x.id} onOpen={open} fisi={fisi} />)}</div></div>
       ))}
     </>
   );
 }
 
-function UebPage({ u }: { u: Aufgabe }) {
+function UebPage({ u, fisi }: { u: Aufgabe; fisi: boolean }) {
   const navigate = useNavigate(), openTopic = useOpenTopic();
-  const r = useProgress((s) => s.S.ueb[u.id]), { saveUeb, setUebCause } = useProgress.getState();
+  const rP = useProgress((s) => s.S.ueb[u.id]), rF = useFisi((s) => s.F.ueb[u.id]), r = fisi ? rF : rP;
+  const { saveUeb, setUebCause } = fisi ? useFisi.getState() : useProgress.getState();
   const TM = useTimer((s) => s.TM);
   const [showSol, setShowSol] = useState(false), [uFree, setUFree] = useState(false), [pts, setPts] = useState(r ? String(r.p) : "");
-  const tid = UEB_TOPIC[u.id], tkey = "u:" + u.id, ust = tmState(TM, tkey);
+  const tid = fisi ? undefined : UEB_TOPIC[u.id], tkey = "u:" + u.id, ust = tmState(TM, tkey);
   // Nach dem Speichern zeigt das Feld wie in der Live-App den gespeicherten (begrenzten) Wert
-  const save = () => { saveUeb(u.id, pts); const n = useProgress.getState().S.ueb[u.id]; if (n) setPts(String(n.p)); };
+  const save = () => { saveUeb(u.id, pts); const n = fisi ? useFisi.getState().F.ueb[u.id] : useProgress.getState().S.ueb[u.id]; if (n) setPts(String(n.p)); };
 
   return (
     <>

@@ -8,7 +8,7 @@
 import { useEffect } from "react";
 import { Link, Outlet, createRootRoute, redirect, useLocation, useNavigate } from "@tanstack/react-router";
 import { useRegisterSW } from "virtual:pwa-register/react";
-import { allQ, type LearningArea } from "@/content/catalog";
+import { allQ } from "@/content/catalog";
 import { daysBetween, today } from "@/lib/dates";
 import { counts } from "@/lib/srs";
 import { evOn, eventsFor } from "@/lib/events";
@@ -59,7 +59,7 @@ let booted = false;
 const BOOT_HASH = typeof window !== "undefined" ? window.location.hash.slice(1) : "";
 function Shell() {
   const S = useProgress((s) => s.S), sess = useProgress((s) => s.sess), run = usePruefung((s) => s.run);
-  const area = useLearningArea((s) => s.area), setArea = useLearningArea((s) => s.setArea);
+  const area = useLearningArea((s) => s.area);
   const examDay = useExamDay();
   const loc = useLocation(), navigate = useNavigate();
   useGami((t) => t.n);
@@ -70,7 +70,6 @@ function Shell() {
   useEffect(() => { document.title = `${VTITLE[view] ?? (view === "tutor" ? "Tutor" : "Vortex")} · Vortex`; }, [view]);
 
   const c = counts(S, allQ(S, area)), left = daysBetween(today(), examDay);
-  const areaLocked = !!sess || !!run;
   const tutorOn = useAccount((s) => isAdmin(s.user)); // Menüpunkt Tutor nur fürs Admin-Konto
   const navView = view === "operatoren" || view === "plan" ? "tipps" : view === "lernen" && sess?.src?.ev ? "events" : view; // Event-Runde: Menüpunkt Events
   const focus = loc.pathname.startsWith("/lernen/runde") || (view === "pruefung" && !!run && run.phase === "write"); // Fokus wie die Live-App: Lernrunde, Prüfung beim Schreiben
@@ -93,10 +92,7 @@ function Shell() {
       </nav>
       <div className="col">
         <header className="top" id="topbar">
-          <div className="top-l"><h1 id="page-title">{VTITLE[view] ?? (view === "tutor" ? "Tutor" : "Vortex")}</h1><div className="segs area-switch" role="group" aria-label="Lernbereich">
-            <button type="button" className={`seg ${area === "fiae" ? "on" : ""}`} aria-pressed={area === "fiae"} disabled={areaLocked} title={areaLocked ? "Beende zuerst die laufende Runde oder Prüfung" : "Fachinformatik Anwendungsentwicklung"} onClick={() => setArea("fiae")}>FIAE</button>
-            <button type="button" className={`seg ${area === "fisi" ? "on" : ""}`} aria-pressed={area === "fisi"} disabled={areaLocked} title={areaLocked ? "Beende zuerst die laufende Runde oder Prüfung" : "Fachinformatik Systemintegration"} onClick={() => setArea("fisi")}>FISI</button>
-          </div></div>
+          <div className="top-l"><h1 id="page-title">{VTITLE[view] ?? (view === "tutor" ? "Tutor" : "Vortex")}</h1></div>
           <div className="hud" id="hud">
             <button type="button" className="pill" data-go="start" title="Anteil der Fragen auf Grün, gelbe zählen halb"><Ring frac={c.pct} size={22} sw={4} /><span className="lbl">Prüfungsreife</span><b>{pctS(c.pct)}</b></button>
             <span className="pill days"><Ic name="calendar" /><b>{Math.max(0, left)}</b><span className="lbl">{left === 1 ? "Tag" : "Tage"}</span></span>

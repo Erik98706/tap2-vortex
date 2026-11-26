@@ -35,10 +35,10 @@ function Tutorial() {
     ["code", "Code schreiben, nicht nur lesen", "Bei Pseudocode- und SQL-Karten deine Lösung im Editor tippen, SQL mit Shift + Enter ausführen und mit der Musterlösung vergleichen.", <B k="code">Code-Karte üben</B>],
     ["pencil", "Große Aufgaben auf Papier, mit Timer", "Unter Aufgaben eine Aufgabe starten – der Timer läuft mit der Prüfungszeit. Auf Papier lösen, Stopp drücken, mit der Musterlösung vergleichen und Punkte eintragen.", <B k="aufgaben">Zu den Aufgaben</B>],
     ["bulb", "Operatoren beherrschen", "Der Operator bestimmt die Antworttiefe: „Nennen“ = Stichwort, „Erläutern“ = mit Begründung oder Beispiel, „Beurteilen“ = mit eigenem Urteil. Im Operator-Trainer übst du genau das.", <B k="operatoren">Operator-Trainer</B>],
-    ["timer", "Einmal pro Woche: Prüfung simulieren", "Je Teil eine Real-Klausur (Teil 1, Teil 2) bzw. SoWi-Simulation unter Zeitdruck. Beim Bewerten jedem Punktverlust eine Ursache zuordnen – unter Tipps siehst du, woran es am häufigsten liegt.", <B k="pruefung">Zur Prüfung</B>],
+    ["timer", "Einmal pro Woche: Prüfung simulieren", area === "fiae" ? "Je Teil eine Real-Klausur (Teil 1, Teil 2) bzw. SoWi-Simulation unter Zeitdruck. Beim Bewerten jedem Punktverlust eine Ursache zuordnen – unter Tipps siehst du, woran es am häufigsten liegt." : "Je Teil eine Real-Klausur (Konzeption & Administration, Netzwerke) unter Zeitdruck. Beim Bewerten jedem Punktverlust eine Ursache zuordnen – unter Tipps siehst du, woran es am häufigsten liegt.", <B k="pruefung">Zur Prüfung</B>],
     ["bulb", "Letzte Woche: festigen statt neu lernen", area === "fiae" ? "Nur noch fällige Wiederholungen, Fehlerfragen und Simulationen. Prüfungstechnik unter Tipps lesen. Am Tag vor der Prüfung nichts Neues mehr." : "Nur noch fällige Wiederholungen und Fehlerfragen. Prüfungstechnik unter Tipps lesen. Am Tag vor der Prüfung nichts Neues mehr.", <B k="tipps">Zu den Tipps</B>],
   ];
-  const steps = area === "fiae" ? allSteps : allSteps.filter(([icon]) => !["code", "pencil", "timer"].includes(icon));
+  const steps = area === "fiae" ? allSteps : allSteps.filter(([icon]) => icon !== "code");
   return (
     <>
       <section className="card tut-plan">
@@ -51,8 +51,8 @@ function Tutorial() {
         <div className="cheat">
           <div className="card"><h4><Ic name="home" cls="ic sm" /> Übersicht</h4><p className="small muted">Prüfungsreife, Stand je Teil, Lernempfehlung, „Gezielt üben“ (fällig, Fehler, neu, markiert, Zufall).</p></div>
           <div className="card"><h4><Ic name="book" cls="ic sm" /> Lernen</h4><p className="small muted">Themen mit Theorie und Fragen. Mehrere Themen anhaken = gemeinsame Lernrunde. Eigene Fragen anlegen.</p></div>
-          <div className="card"><h4><Ic name="pencil" cls="ic sm" /> Aufgaben</h4><p className="small muted">{area === "fiae" ? "Große Aufgaben im Prüfungsstil mit Timer, Musterlösung und Punkteeintrag." : "Eigenständige FISI-Übungsaufgaben werden ergänzt. Die verfügbaren Fragen findest du unter Lernen."}</p></div>
-          <div className="card"><h4><Ic name="timer" cls="ic sm" /> Prüfung</h4><p className="small muted">{area === "fiae" ? "Simulation (30 Auswahlfragen) und Real-Klausur (4 offene Aufgaben, 90 Min.) mit Note." : "Eine FISI-Prüfungssimulation ist noch nicht hinterlegt."}</p></div>
+          <div className="card"><h4><Ic name="pencil" cls="ic sm" /> Aufgaben</h4><p className="small muted">{area === "fiae" ? "Große Aufgaben im Prüfungsstil mit Timer, Musterlösung und Punkteeintrag." : "Szenario-Aufgaben im Prüfungsstil (je Teil vier) mit Timer, Musterlösung und Punkteeintrag."}</p></div>
+          <div className="card"><h4><Ic name="timer" cls="ic sm" /> Prüfung</h4><p className="small muted">{area === "fiae" ? "Simulation (30 Auswahlfragen) und Real-Klausur (4 offene Aufgaben, 90 Min.) mit Note." : "Simulation (30 Auswahlfragen) und Real-Klausur (4 offene Aufgaben, 90 Min.) je Teil mit Note."}</p></div>
           <div className="card"><h4><Ic name="bulb" cls="ic sm" /> Tipps</h4><p className="small muted">Prüfungstechnik, Operatoren, typische Punktverluste und deine schwächsten Themen.</p></div>
           <div className="card"><h4><Ic name="gear" cls="ic sm" /> Einstellungen</h4><p className="small muted">Hell/Dunkel, App installieren, Sicherung speichern/laden, Fortschritt zurücksetzen.</p></div>
         </div>

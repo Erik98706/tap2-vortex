@@ -8,6 +8,8 @@
 import tap2Raw from "./generated/tap2.json";
 import fisiRaw from "./fisi.json";
 import { FISI_EXTRA, FISI_TOPICS } from "./fisi-bank";
+import { PAKETE_ADMIN } from "./fisi/pakete-admin";
+import { PAKETE_NETZWERK } from "./fisi/pakete-netzwerk";
 import lf11aRaw from "./generated/event-lf11a.json";
 import wpfRaw from "./generated/event-wpf.json";
 import type { CardQuestion, EventCatalog, Question, Tap2Catalog, Topic } from "./schema";
@@ -19,6 +21,7 @@ export const FISI = {
   ...fisiRaw,
   topics: [...fisiRaw.topics, ...FISI_TOPICS],
   questions: [...fisiRaw.questions, ...FISI_EXTRA],
+  pakete: [...PAKETE_NETZWERK, ...PAKETE_ADMIN],
 } as unknown as Tap2Catalog;
 export type LearningArea = "fiae" | "fisi";
 export const catalogFor = (area: LearningArea = "fiae"): Tap2Catalog => area === "fisi" ? FISI : TAP2;

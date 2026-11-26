@@ -13,6 +13,7 @@ export const KEYS = {
   state: "tap2coach",
   session: "tap2coach-sess",
   beforeImport: "tap2coach-vor-import",
+  fisi: "tap2coach-fisi", // nur Dev-App: FISI-Aufgabenpunkte und Prüfungsergebnisse, getrennt vom Lernstand der Live-App
 } as const;
 
 /**

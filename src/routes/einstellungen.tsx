@@ -27,6 +27,7 @@ import { SyncCard } from "@/components/SyncCard";
 import { supabase } from "@/lib/supabase";
 import { EXAM_TERMS, FEATURES, type ExamTermId } from "@/config";
 import { useAccount } from "@/store/account";
+import { useLearningArea } from "@/store/learning-area";
 import { useExamSettings } from "@/store/exam-date";
 import { formatExamDate, resolveExamDate } from "@/lib/exam-date";
 
@@ -39,6 +40,7 @@ function Einstellungen() {
   const pwa = usePwa();
   return (
     <>
+      <LearningAreaCard />
       <section className="card">
         <h3>Darstellung</h3>
         <div className="segs" role="group" aria-label="Darstellung" style={{ marginTop: 10 }}>{([["auto", "wie System", "auto"], ["light", "Hell", "sun"], ["dark", "Dunkel", "moon"]] as const).map(([m, l, i]) => <button key={m} type="button" className={`seg ${tm === m ? "on" : ""}`} aria-pressed={tm === m} onClick={() => { setTheme(m); setTm(m); }}><Ic name={i} cls="ic xs" /> {l}</button>)}</div>
@@ -61,6 +63,21 @@ function Einstellungen() {
       <section className="card"><h3>Hilfe</h3><p className="tiny muted">App-Version {BUILD}</p><div className="row" style={{ marginTop: 8 }}><button type="button" className="btn small" data-go2="tutorial"><Ic name="map" cls="ic xs" /> Tutorial öffnen</button><button type="button" className="btn small" data-go2="patchnotes">Patch Notes</button><a className="btn small ghost" href={`https://github.com/${REPO}/issues`} target="_blank" rel="noopener">Gemeldete Fehler ansehen</a></div></section>
       <p className="tiny muted" style={{ textAlign: "center", marginTop: 8 }}><button type="button" className="linkbtn" data-go2="datenschutz">Datenschutz</button></p>
     </>
+  );
+}
+
+function LearningAreaCard() {
+  const area = useLearningArea((s) => s.area), setArea = useLearningArea((s) => s.setArea);
+  const hasSession = useProgress((s) => !!s.sess), hasExam = !!usePruefung((s) => s.run);
+  const areaLocked = hasSession || hasExam;
+  return (
+    <section className="card">
+      <h3>Lernbereich</h3>
+      <div className="segs" role="group" aria-label="Lernbereich" style={{ marginTop: 10 }}>
+        <button type="button" className={`seg ${area === "fiae" ? "on" : ""}`} aria-pressed={area === "fiae"} disabled={areaLocked} title={areaLocked ? "Beende zuerst die laufende Runde oder Prüfung" : "Fachinformatik Anwendungsentwicklung"} onClick={() => setArea("fiae")}>FIAE</button>
+        <button type="button" className={`seg ${area === "fisi" ? "on" : ""}`} aria-pressed={area === "fisi"} disabled={areaLocked} title={areaLocked ? "Beende zuerst die laufende Runde oder Prüfung" : "Fachinformatik Systemintegration"} onClick={() => setArea("fisi")}>FISI</button>
+      </div>
+    </section>
   );
 }
 
