@@ -73,8 +73,8 @@ describe("Kataloge", () => {
     expect(teil["si-wiso"]).toBe("SoWi");
   });
 
-  it("neue FISI-Netzwerkthemen haben je mindestens 15 Fragen, Auswahlfragen und Karten mit Punkten", () => {
-    ["si-ipv6", "si-protokolle", "si-switching", "si-routing", "si-firewall", "si-diagnose"].forEach((id) => {
+  it("neue FISI-Themen haben je mindestens 15 Fragen, Auswahlfragen und Karten mit Punkten", () => {
+    ["si-ipv6", "si-protokolle", "si-switching", "si-routing", "si-firewall", "si-diagnose", "si-hardware", "si-cloud", "si-serverdienste", "si-backup", "si-skripting", "si-planung"].forEach((id) => {
       const qs = systemIntegration.questions.filter((q) => q.topic === id);
       expect(qs.length, id).toBeGreaterThanOrEqual(15);
       expect(qs.filter((q) => q.type === "mc").length, id).toBeGreaterThanOrEqual(9);

@@ -3,12 +3,14 @@ import { subnetQuestions } from "./fisi/subnetting";
 import { wisoQuestions } from "./fisi/wiso";
 import { ADMIN_SPECS, NETWORK_SPECS, OPERATIONS_SPECS, PROJECT_SPECS, SECURITY_SPECS, ihk } from "./fisi/ihk";
 import { NETZWERK_TOPICS, netzwerkQuestions } from "./fisi/netzwerk";
+import { ADMIN_TOPICS, adminQuestions } from "./fisi/administration";
 
 export const FISI_TOPICS: Topic[] = [
   { id: "si-adressierung", n: "IPv4-Adressierung & Subnetting", teil: "Teil 2", prio: "Muss", ic: "server", th: [], decks: [], cats: [] },
   { id: "si-projekt", n: "Projekt Systemintegration", teil: "Teil 1", prio: "Muss", ic: "check", th: [], decks: [], cats: [] },
   { id: "si-wiso", n: "Wirtschafts- und Sozialkunde", teil: "SoWi", prio: "Wichtig", ic: "calendar", th: [], decks: [], cats: [] },
   ...NETZWERK_TOPICS,
+  ...ADMIN_TOPICS,
 ];
 
 const card = (id: string, topic: string, q: string, a: string): CardQuestion => ({ id, type: "card", topic, q, a, note: "", code: false });
@@ -252,4 +254,4 @@ const security = ihk(cards("security", "si-sicherheit", SECURITY_CARDS), SECURIT
 const operations = ihk(cards("operations", "si-betrieb", OPERATIONS_CARDS), OPERATIONS_SPECS);
 const project = ihk(cards("projekt", "si-projekt", PROJECT_CARDS), PROJECT_SPECS);
 
-export const FISI_EXTRA: Question[] = [...legacySubnetQuestions(), ...subnetQuestions(), ...network, ...admin, ...security, ...operations, ...project, ...netzwerkQuestions(), ...wisoQuestions()];
+export const FISI_EXTRA: Question[] = [...legacySubnetQuestions(), ...subnetQuestions(), ...network, ...admin, ...security, ...operations, ...project, ...netzwerkQuestions(), ...adminQuestions(), ...wisoQuestions()];
