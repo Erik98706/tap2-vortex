@@ -6,6 +6,7 @@ import { allQ, figFor, topicMapFor, topicQ, type LearningArea } from "@/content/
 import type { Question, Topic } from "@/content/schema";
 import { ST_LBL, ST_SHORT, qParts, situBlocks, tcolOf } from "@/lib/lernen";
 import { buildPlan, type PlanItem } from "@/lib/plan";
+import { teilInfo } from "@/lib/pruefung";
 import { today } from "@/lib/dates";
 import { useExamDay } from "@/store/exam-date";
 import type { Seg } from "@/lib/search";
@@ -81,7 +82,7 @@ export type PlanActions = { topic: (tid: string) => void; sim: (teil: string) =>
 /** Eintrag im Lernplan (planItemHTML): Knöpfe nur für heute (mit act) */
 export function PlanLi({ it, act, area = "fiae" }: { it: PlanItem; act?: PlanActions; area?: LearningArea }) {
   if (it.kind === "topic") { const t = topicMapFor(area)[it.tid]; return <li><span className="pi-ic"><Ic name={t.ic ?? ""} cls="ic sm" /></span><span className="pi-t"><b>{t.n}</b><span className="small muted">{it.n} Fragen · {t.teil}</span></span>{act && <button type="button" className="btn small" onClick={() => act.topic(it.tid)}><Ic name="play" cls="ic xs" /> Lernen</button>}</li>; }
-  if (it.kind === "sim") return <li><span className="pi-ic"><Ic name="timer" cls="ic sm" /></span><span className="pi-t"><b>Prüfung simulieren: {TEIL_K[it.teil]}</b><span className="small muted">{it.teil === "wiso" ? "Simulation, 60 Min." : "Real-Klausur, 90 Min."} · danach Fehlerursachen eintragen</span></span>{act && <button type="button" className="btn small" onClick={() => act.sim(it.teil)}>Starten</button>}</li>;
+  if (it.kind === "sim") return <li><span className="pi-ic"><Ic name="timer" cls="ic sm" /></span><span className="pi-t"><b>Prüfung simulieren: {area === "fisi" ? teilInfo({ area, teil: it.teil }).k : TEIL_K[it.teil]}</b><span className="small muted">{it.teil === "wiso" ? "Simulation, 60 Min." : "Real-Klausur, 90 Min."} · danach Fehlerursachen eintragen</span></span>{act && <button type="button" className="btn small" onClick={() => act.sim(it.teil)}>Starten</button>}</li>;
   if (it.kind === "op") return <li><span className="pi-ic"><Ic name="bulb" cls="ic sm" /></span><span className="pi-t"><b>Operator-Trainer</b><span className="small muted">10 Min. · Antworttiefe üben</span></span>{act && <button type="button" className="btn small" onClick={() => act.go("operatoren")}>Öffnen</button>}</li>;
   return <li><span className="pi-ic"><Ic name="star" cls="ic sm" /></span><span className="pi-t"><b>Nur wiederholen</b><span className="small muted">Fällige Fragen und Fehler, Tipps lesen, nichts Neues. Früh schlafen.</span></span>{act && <button type="button" className="btn small" onClick={() => act.go("tipps")}>Tipps</button>}</li>;
 }

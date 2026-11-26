@@ -104,10 +104,15 @@ describe("Lernplan", () => {
     expect(P.plan["2026-11-18"].some((x) => x.kind === "op")).toBe(true);
     expect(buildPlan(blank(), exam, exam).days).toEqual([]);
   });
-  it("plant FISI-Fragen, ohne FIAE-Simulationen oder Operator-Übungen einzumischen", () => {
+  it("plant FISI-Fragen und sonntags Real-Klausuren im Wechsel Teil 1/Teil 2, ohne FIAE-Simulationen oder Operator-Training", () => {
     const P = buildPlan(blank(), from, exam, "fisi");
     expect(P.total).toBe(FISI.questions.length);
-    expect(Object.values(P.plan).flat().every((item) => item.kind === "topic" || item.kind === "final")).toBe(true);
+    expect(Object.values(P.plan).flat().every((item) => item.kind === "topic" || item.kind === "final" || item.kind === "sim")).toBe(true);
+    const sims = P.days.filter((d) => wdOf(d) === 0).flatMap((d) => P.plan[d]);
+    expect(sims.length).toBeGreaterThan(0);
+    sims.forEach((item) => expect(item.kind === "sim" && ["t1", "t2"].includes(item.teil)).toBe(true));
+    const long = buildPlan(blank(), "2026-11-01", "2027-01-20", "fisi"), seq = long.days.filter((d) => wdOf(d) === 0).flatMap((d) => long.plan[d]).map((x) => (x.kind === "sim" ? x.teil : ""));
+    expect(seq.slice(0, 4)).toEqual(["t1", "t2", "t1", "t2"]);
     Object.values(P.plan).flat().forEach((item) => { if (item.kind === "topic") expect(item.tid.startsWith("si-")).toBe(true); });
   });
 });
