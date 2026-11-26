@@ -10,6 +10,7 @@ import wpf from "./generated/event-wpf.json";
 import fisi from "./fisi.json";
 import { CatalogIndex, EventCatalog, Tap2Catalog } from "./schema";
 import { allQ, catalogFor, FISI, NORMALIZE_CTX, topicsFor } from "./catalog";
+import { FISI_UEB } from "./fisi/aufgaben";
 import { blank, normalize } from "@/lib/state";
 
 describe("Kataloge", () => {
@@ -80,6 +81,27 @@ describe("Kataloge", () => {
       expect(qs.filter((q) => q.type === "mc").length, id).toBeGreaterThanOrEqual(9);
       qs.filter((q) => q.type === "card").forEach((q) => expect(q.q, q.id).toMatch(/\(\d+ P\.\)$/));
     });
+  });
+
+  it("jedes FISI-Thema hat Lernpakete mit Kernaussagen, Fallen und Zielen; Aufgabenverweise sind gültig", () => {
+    const PK = new Map(systemIntegration.pakete.map((p) => [p.id, p]));
+    expect(PK.size).toBe(systemIntegration.pakete.length); // eindeutige IDs
+    const used = new Set<string>();
+    systemIntegration.topics.forEach((t) => {
+      expect(t.th.length, t.id).toBeGreaterThanOrEqual(1);
+      t.th.forEach((id) => { expect(PK.has(id), t.id + " " + id).toBe(true); expect(used.has(id), id + " doppelt").toBe(false); used.add(id); });
+    });
+    expect(used.size).toBe(PK.size); // kein Paket ohne Thema
+    const ueb = new Set(FISI_UEB.map((u) => u.id));
+    systemIntegration.pakete.forEach((p) => {
+      expect(p.kern.length, p.id).toBeGreaterThanOrEqual(5);
+      p.kern.forEach(([h, tx]) => { expect(h.length, p.id).toBeGreaterThanOrEqual(3); expect(tx.length, p.id + h).toBeGreaterThan(60); });
+      expect((p.fallen ?? []).length, p.id).toBeGreaterThanOrEqual(3);
+      expect((p.ziele ?? []).length, p.id).toBeGreaterThanOrEqual(3);
+      expect(p.h, p.id).toBeGreaterThan(0);
+      (p.ueb ?? []).forEach((u) => expect(ueb.has(u), p.id + " " + u).toBe(true));
+    });
+    FISI_UEB.forEach((u) => expect(systemIntegration.pakete.some((p) => p.ueb?.includes(u.id)), u.id + " ohne Thema").toBe(true));
   });
 
   it("wechselt Katalogdaten, ohne den FIAE-Standard zu verändern", () => {

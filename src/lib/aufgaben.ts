@@ -44,8 +44,8 @@ export function logCause(errlog: ErrEntry[], src: string, ref: string, pts: numb
 export const UEB: Aufgabe[] = TAP2.ueb;
 export const UE: Record<string, Aufgabe> = Object.fromEntries(UEB.map((u) => [u.id, u]));
 const PK = Object.fromEntries(TAP2.pakete.map((p) => [p.id, p]));
-/** Aufgaben eines Themas: aus seinen Lernpaketen, ohne Doppelte (t.ueb in der Live-App) */
-export const uebOf = (t: Topic) => [...new Set(t.th.flatMap((id) => (PK[id] ? PK[id].ueb ?? [] : [])))].filter((u) => UE[u]);
+/** Aufgaben eines Themas: aus seinen Lernpaketen, ohne Doppelte (t.ueb in der Live-App). Bei FISI: eigene Pakete und Aufgaben. */
+export const uebOf = (t: Topic, pk: Record<string, { ueb?: string[] }> = PK, lookup: Record<string, Aufgabe> = UE) => [...new Set(t.th.flatMap((id) => (pk[id] ? pk[id].ueb ?? [] : [])))].filter((u) => lookup[u]);
 /** Thema mit der Theorie zu einer Aufgabe: das erste Thema, das sie enthält (UEB_TOPIC) */
 export const UEB_TOPIC: Record<string, string> = {};
 TOPICS.forEach((t) => uebOf(t).forEach((u) => { if (!UEB_TOPIC[u]) UEB_TOPIC[u] = t.id; }));

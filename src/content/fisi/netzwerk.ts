@@ -3,12 +3,12 @@ import { karten, mcs, type Karte, type Mc } from "./helpers";
 
 // Teil 2 · Analyse und Entwicklung von Netzwerken: eigenständig formulierte Fragen (keine Prüfungstexte), IDs neu und dauerhaft stabil.
 export const NETZWERK_TOPICS: Topic[] = [
-  { id: "si-ipv6", n: "IPv6", teil: "Teil 2", prio: "Wichtig", ic: "globe", th: [], decks: [], cats: [] },
-  { id: "si-protokolle", n: "Protokolle & Dienste (OSI, TCP/UDP, DNS, DHCP)", teil: "Teil 2", prio: "Muss", ic: "layers", th: [], decks: [], cats: [] },
-  { id: "si-switching", n: "Switching, VLAN & WLAN", teil: "Teil 2", prio: "Muss", ic: "diagram", th: [], decks: [], cats: [] },
-  { id: "si-routing", n: "Routing, NAT & Internetanbindung", teil: "Teil 2", prio: "Muss", ic: "right", th: [], decks: [], cats: [] },
-  { id: "si-firewall", n: "Firewall, DMZ & VPN", teil: "Teil 2", prio: "Muss", ic: "shield", th: [], decks: [], cats: [] },
-  { id: "si-diagnose", n: "Fehleranalyse im Netzwerk", teil: "Teil 2", prio: "Muss", ic: "search", th: [], decks: [], cats: [] },
+  { id: "si-ipv6", n: "IPv6", teil: "Teil 2", prio: "Wichtig", ic: "globe", th: ["FP03"], decks: [], cats: [] },
+  { id: "si-protokolle", n: "Protokolle & Dienste (OSI, TCP/UDP, DNS, DHCP)", teil: "Teil 2", prio: "Muss", ic: "layers", th: ["FP04"], decks: [], cats: [] },
+  { id: "si-switching", n: "Switching, VLAN & WLAN", teil: "Teil 2", prio: "Muss", ic: "diagram", th: ["FP05"], decks: [], cats: [] },
+  { id: "si-routing", n: "Routing, NAT & Internetanbindung", teil: "Teil 2", prio: "Muss", ic: "right", th: ["FP06"], decks: [], cats: [] },
+  { id: "si-firewall", n: "Firewall, DMZ & VPN", teil: "Teil 2", prio: "Muss", ic: "shield", th: ["FP07"], decks: [], cats: [] },
+  { id: "si-diagnose", n: "Fehleranalyse im Netzwerk", teil: "Teil 2", prio: "Muss", ic: "search", th: ["FP08"], decks: [], cats: [] },
 ];
 
 // ---------- IPv6

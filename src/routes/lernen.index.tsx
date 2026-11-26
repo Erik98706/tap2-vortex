@@ -21,6 +21,7 @@ import { BezLoesung } from "@/components/BezVisual";
 import { AmpBar, Amp, Legend, TimerBox, TopicRow } from "@/components/lernen/bits";
 import { UebItem } from "@/components/aufgaben/UebItem";
 import { uebOf } from "@/lib/aufgaben";
+import { fisiUE } from "@/lib/fisi-pruefung";
 import { useAnimRings, useLernenUI, useOpenTopic, useStartRound, type Tf, type TTab } from "@/components/lernen/ui";
 
 const search = z.object({ thema: z.string().optional().catch(undefined) }); // fehlerhafte Links nie zum Absturz führen lassen
@@ -127,8 +128,9 @@ function TopicPage({ t, area, catalog }: { t: Topic; area: "fiae" | "fisi"; cata
   const ttab = useLernenUI((s) => s.ttab), navigate = useNavigate(), startRound = useStartRound();
   const [addQ, setAddQ] = useState(false), [confirm, setConfirm] = useState<string | null>(null), [msg, setMsg] = useState("");
   const fRef = useRef<HTMLTextAreaElement>(null), bRef = useRef<HTMLTextAreaElement>(null), headRef = useRef<HTMLElement>(null);
-  const qs = topicQ(S, t.id, area), c = counts(S, qs), ueb = uebOf(t), dueN = dueCount(S, qs);
+  const qs = topicQ(S, t.id, area), c = counts(S, qs), dueN = dueCount(S, qs);
   const PK = Object.fromEntries(catalog.pakete.map((p) => [p.id, p]));
+  const ueb = area === "fisi" ? uebOf(t, PK, fisiUE) : uebOf(t);
   const theo = t.th.map((id) => PK[id]).filter(Boolean);
   const tab: TTab = !theo.length || (ttab === "aufgaben" && !ueb.length) ? "fragen" : ttab;
   useAnimRings(headRef, [t.id]);
@@ -201,7 +203,7 @@ function TopicPage({ t, area, catalog }: { t: Topic; area: "fiae" | "fisi"; cata
       )}
       {tab === "aufgaben" && (
         <div className="ueb-list">
-          {ueb.map((id) => <UebItem key={id} id={id} onOpen={(u) => { void navigate({ to: "/aufgaben", search: { u } }); window.scrollTo({ top: 0 }); }} />)}
+          {ueb.map((id) => <UebItem key={id} id={id} fisi={area === "fisi"} onOpen={(u) => { void navigate({ to: "/aufgaben", search: { u } }); window.scrollTo({ top: 0 }); }} />)}
         </div>
       )}
     </>

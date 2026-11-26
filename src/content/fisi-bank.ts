@@ -6,9 +6,9 @@ import { NETZWERK_TOPICS, netzwerkQuestions } from "./fisi/netzwerk";
 import { ADMIN_TOPICS, adminQuestions } from "./fisi/administration";
 
 export const FISI_TOPICS: Topic[] = [
-  { id: "si-adressierung", n: "IPv4-Adressierung & Subnetting", teil: "Teil 2", prio: "Muss", ic: "server", th: [], decks: [], cats: [] },
-  { id: "si-projekt", n: "Projekt Systemintegration", teil: "Teil 1", prio: "Muss", ic: "check", th: [], decks: [], cats: [] },
-  { id: "si-wiso", n: "Wirtschafts- und Sozialkunde", teil: "SoWi", prio: "Wichtig", ic: "calendar", th: [], decks: [], cats: [] },
+  { id: "si-adressierung", n: "IPv4-Adressierung & Subnetting", teil: "Teil 2", prio: "Muss", ic: "server", th: ["FP02"], decks: [], cats: [] },
+  { id: "si-projekt", n: "Projekt Systemintegration", teil: "Teil 1", prio: "Muss", ic: "check", th: ["FP12"], decks: [], cats: [] },
+  { id: "si-wiso", n: "Wirtschafts- und Sozialkunde", teil: "SoWi", prio: "Wichtig", ic: "calendar", th: ["FP19", "FP20"], decks: [], cats: [] },
   ...NETZWERK_TOPICS,
   ...ADMIN_TOPICS,
 ];

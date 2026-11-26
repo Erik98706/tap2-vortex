@@ -29,7 +29,7 @@ describe("Runden", () => {
     expect(p.src).toEqual({ kind: "learn", tid: "si-netzwerk", area: "fisi" });
     expect(p.list.length).toBeGreaterThan(0);
     p.list.forEach((q) => expect(q.id.startsWith("fisi:")).toBe(true));
-    expect(startTab(blank(), "si-netzwerk", "fisi")).toBe("fragen");
+    expect(startTab(blank(), "si-netzwerk", "fisi")).toBe("theorie"); // FISI hat Lernpakete: neue Themen starten mit der Theorie
   });
   it("Thema lernen: höchstens 20, Titel = Themenname", () => {
     const p = learnList(blank(), "learn", "T01")!;

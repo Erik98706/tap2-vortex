@@ -3,12 +3,12 @@ import { karten, mcs, type Karte, type Mc } from "./helpers";
 
 // Teil 1 · Konzeption und Administration von IT-Systemen: eigenständig formulierte Fragen (keine Prüfungstexte), IDs neu und dauerhaft stabil.
 export const ADMIN_TOPICS: Topic[] = [
-  { id: "si-hardware", n: "Hardware & Storage (RAID, USV)", teil: "Teil 1", prio: "Muss", ic: "db", th: [], decks: [], cats: [] },
-  { id: "si-cloud", n: "Hypervisor, Container & Cloud", teil: "Teil 1", prio: "Muss", ic: "cloud", th: [], decks: [], cats: [] },
-  { id: "si-serverdienste", n: "Serverdienste & Administration", teil: "Teil 1", prio: "Muss", ic: "users", th: [], decks: [], cats: [] },
-  { id: "si-backup", n: "Datensicherung & Verfügbarkeit", teil: "Teil 1", prio: "Muss", ic: "again", th: [], decks: [], cats: [] },
-  { id: "si-skripting", n: "Skripting & Systemverwaltung", teil: "Teil 1", prio: "Muss", ic: "terminal", th: [], decks: [], cats: [] },
-  { id: "si-planung", n: "Planung, Wirtschaftlichkeit & Lizenzen", teil: "Teil 1", prio: "Wichtig", ic: "scale", th: [], decks: [], cats: [] },
+  { id: "si-hardware", n: "Hardware & Storage (RAID, USV)", teil: "Teil 1", prio: "Muss", ic: "db", th: ["FP13"], decks: [], cats: [] },
+  { id: "si-cloud", n: "Hypervisor, Container & Cloud", teil: "Teil 1", prio: "Muss", ic: "cloud", th: ["FP14"], decks: [], cats: [] },
+  { id: "si-serverdienste", n: "Serverdienste & Administration", teil: "Teil 1", prio: "Muss", ic: "users", th: ["FP15"], decks: [], cats: [] },
+  { id: "si-backup", n: "Datensicherung & Verfügbarkeit", teil: "Teil 1", prio: "Muss", ic: "again", th: ["FP16"], decks: [], cats: [] },
+  { id: "si-skripting", n: "Skripting & Systemverwaltung", teil: "Teil 1", prio: "Muss", ic: "terminal", th: ["FP17"], decks: [], cats: [] },
+  { id: "si-planung", n: "Planung, Wirtschaftlichkeit & Lizenzen", teil: "Teil 1", prio: "Wichtig", ic: "scale", th: ["FP18"], decks: [], cats: [] },
 ];
 
 // ---------- Hardware & Storage
