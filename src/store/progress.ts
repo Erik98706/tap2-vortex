@@ -107,7 +107,7 @@ export const useProgress = create<Store>((set, get) => {
       save(normalize(incoming, NORMALIZE_CTX));
     },
     applySynced: (S) => save(S),
-    resetAll: () => { [KEYS.state, KEYS.session, KEYS.beforeImport].forEach((k) => write(k, null)); set({ S: blank(), sess: null, storeOk: true }); },
+    resetAll: () => { [KEYS.state, KEYS.session, KEYS.beforeImport, KEYS.fisi].forEach((k) => write(k, null)); set({ S: blank(), sess: null, storeOk: true }); void import("./fisi-lernen").then((m) => m.useFisi.getState().reset()); },
     startSession: (title, ids, src = {}, startAt = 0) => {
       if (!ids.length) return;
       if (src.tid) save({ ...get().S, last: src.tid });

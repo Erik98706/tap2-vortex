@@ -21,27 +21,32 @@ export const TEIL: Record<string, { k: string; n: string; min: number }> = {
   wiso: { k: "SoWi", n: "Wirtschafts- und Sozialkunde", min: 60 },
   mix: { k: "Gemischt", n: "Alle Bereiche", min: 0 },
 };
+export const TEIL_FISI: Record<string, { k: string; n: string; min: number }> = {
+  t1: { k: "Konzeption & Administration", n: "Konzeption und Administration von IT-Systemen", min: 90 },
+  t2: { k: "Netzwerke", n: "Analyse und Entwicklung von Netzwerken", min: 90 },
+};
+/** Bezeichnung des Prüfungsteils je Bereich (FISI hat eigene Teile) */
+export const teilInfo = (r: { area?: string; teil: string }) => (r.area === "fisi" ? TEIL_FISI : TEIL)[r.teil] ?? { k: r.teil, n: r.teil, min: 90 };
 export const SIM_MIN: Record<string, number> = { t1: 45, t2: 45, wiso: 60, mix: 45 };
 export const MODE_LBL: Record<string, string> = { sim: "Simulation", real: "Real-Klausur", easy: "Quiz" };
 export const LETTERS = "abcdefgh";
 
 export type SimQ = { id: string; topic: string; q: string; opts: string[]; right: number; why?: string; pick: number | null };
 export type RealItem = { id: string; p: number; q: string; a: string; schema: boolean; ans: string; got: number | null; cause?: string | null };
-export type RealAuf = { cat: string; title: string; items: RealItem[] };
-/** Laufende Prüfung (UI.run). total/used in ms; start = Beginn des laufenden Abschnitts; on = Uhr läuft. */
+export type RealAuf = { cat: string; title: string; items: RealItem[]; intro?: string };
+/** Laufende Prüfung (UI.run). total/used in ms; start = Beginn des laufenden Abschnitts; on = Uhr läuft. area: nur bei FISI gesetzt. */
 export type PkRun = {
-  mode: Mode; teil: string; total: number; used: number; start: number; on: boolean; phase: "write" | "grade" | "done";
+  mode: Mode; teil: string; total: number; used: number; start: number; on: boolean; phase: "write" | "grade" | "done"; area?: "fisi";
   qs?: SimQ[]; i?: number; auf?: RealAuf[]; auto?: boolean; pct?: number;
 };
 
 // ---------- Erzeugen
-/** 30 Auswahlfragen: schwache Fragen bevorzugt (rot > neu > gelb > grün, mit Zufall), je Teil reihum über die Themen. */
-export function pickMC(S: State, teil: string, n: number): SimQ[] {
-  const pool = BASE_Q.filter((q): q is McQuestion => q.type === "mc" && (teil === "mix" || q.teil === teil));
+/** Auswahlfragen aus einem Pool: schwache Fragen bevorzugt (rot > neu > gelb > grün, mit Zufall), bei byTopic reihum über die Themen. */
+export function pickFrom(S: State, pool: McQuestion[], n: number, byTopic: boolean): SimQ[] {
   const w = (q: McQuestion) => { const s = st(S, q.id); return (s === 0 ? 3 : s === -1 ? 2 : s === 1 ? 1.5 : 1) + Math.random() * 2; };
   const wt = new Map(pool.map((q) => [q, w(q)])); // Gewicht einmal je Frage würfeln (sort ruft w() in der Live-App mehrfach auf – gleiche Verteilung)
   let list = pool.slice().sort((a, b) => wt.get(b)! - wt.get(a)!);
-  if (teil !== "mix") {
+  if (byTopic) {
     const tids = [...new Set(list.map((q) => q.topic))], out: McQuestion[] = [];
     let i = 0, guard = 0;
     while (out.length < Math.min(n, list.length) && guard++ < 1000) { const tt = tids[i++ % tids.length]; const nx = list.find((q) => q.topic === tt && !out.includes(q)); if (nx) out.push(nx); }
@@ -49,6 +54,8 @@ export function pickMC(S: State, teil: string, n: number): SimQ[] {
   }
   return shuffle(list.slice(0, n)).map((q) => { const order = shuffle(q.opts.map((_, i) => i)); return { id: q.id, topic: q.topic, q: q.q, opts: order.map((i) => q.opts[i]), right: order.indexOf(q.right), why: q.why, pick: null }; });
 }
+/** 30 Auswahlfragen des FIAE-Katalogs je Teil. */
+export const pickMC = (S: State, teil: string, n: number): SimQ[] => pickFrom(S, BASE_Q.filter((q): q is McQuestion => q.type === "mc" && (teil === "mix" || q.teil === teil)), n, teil !== "mix");
 /** Eine Aufgabe der Real-Klausur: offene Fragen einer Kategorie bis rund 25 Punkte. */
 export function buildAufgabe(teil: string, cat: string): RealAuf {
   const pool = shuffle(TAP2.open.filter((o) => o.teil === teil && o.cat === cat));
