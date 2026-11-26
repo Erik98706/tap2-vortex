@@ -5,7 +5,7 @@ import { ADMIN_SPECS, NETWORK_SPECS, OPERATIONS_SPECS, PROJECT_SPECS, SECURITY_S
 
 export const FISI_TOPICS: Topic[] = [
   { id: "si-adressierung", n: "IPv4-Adressierung & Subnetting", teil: "Teil 2", prio: "Muss", ic: "server", th: [], decks: [], cats: [] },
-  { id: "si-projekt", n: "Projekt Systemintegration", teil: "Teil 2", prio: "Muss", ic: "check", th: [], decks: [], cats: [] },
+  { id: "si-projekt", n: "Projekt Systemintegration", teil: "Teil 1", prio: "Muss", ic: "check", th: [], decks: [], cats: [] },
   { id: "si-wiso", n: "Wirtschafts- und Sozialkunde", teil: "SoWi", prio: "Wichtig", ic: "calendar", th: [], decks: [], cats: [] },
 ];
 

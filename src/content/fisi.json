@@ -23,7 +23,7 @@
     {
       "id": "si-systeme",
       "n": "Systeme & Virtualisierung",
-      "teil": "Teil 2",
+      "teil": "Teil 1",
       "prio": "Muss",
       "ic": "server",
       "th": [],
@@ -33,7 +33,7 @@
     {
       "id": "si-sicherheit",
       "n": "IT-Sicherheit & Datenschutz",
-      "teil": "Teil 2",
+      "teil": "Teil 1",
       "prio": "Muss",
       "ic": "lock",
       "th": [],
@@ -43,7 +43,7 @@
     {
       "id": "si-betrieb",
       "n": "Betrieb & Fehleranalyse",
-      "teil": "Teil 2",
+      "teil": "Teil 1",
       "prio": "Wichtig",
       "ic": "check",
       "th": [],

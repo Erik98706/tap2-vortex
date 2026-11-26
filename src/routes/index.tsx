@@ -20,7 +20,7 @@ import { usePlanActions } from "@/components/tipps/actions";
 export const Route = createFileRoute("/")({ component: Start });
 
 const PARTS = ["t1", "t2", "wiso"] as const;
-const TEIL_K = { t1: "Planen", t2: "Algorithmen", wiso: "SoWi" };
+const TEIL_K = { fiae: { t1: "Planen", t2: "Algorithmen", wiso: "SoWi" }, fisi: { t1: "Konzeption & Administration", t2: "Netzwerke", wiso: "WiSo" } };
 
 function Start() {
   const S = useProgress((s) => s.S);
@@ -50,26 +50,19 @@ function Start() {
         <div className="hero-side"><Ring frac={c.pct} size={150} sw={12} cls="anim" inner={<>{Math.round(c.pct * 100)}<small>% prüfungsreif</small></>} /></div>
       </section>
       <div className="parts">
-        {area === "fiae" ? parts.map(({ p, c: pc }) => (
+        {parts.map(({ p, c: pc }) => (
           <section key={p} className={`card part t-${tcolOf(p)}`}>
             <div className="row">
               <Ring frac={pc.pct} size={58} sw={6} cls="anim" inner={<span className="tiny">{Math.round(pc.pct * 100)}%</span>} />
-              <div style={{ flex: 1, minWidth: 0 }}><span className="tiny muted">{p === "wiso" ? "SoWi · 60 Min." : p === "t1" ? "Teil 1 · 90 Min." : "Teil 2 · 90 Min."} · alle Themen</span><h3>{TEIL_K[p]}</h3></div>
+              <div style={{ flex: 1, minWidth: 0 }}><span className="tiny muted">{p === "wiso" ? (area === "fisi" ? "WiSo" : "SoWi") + " · 60 Min." : p === "t1" ? "Teil 1 · 90 Min." : "Teil 2 · 90 Min."} · alle Themen</span><h3>{TEIL_K[area][p]}</h3></div>
             </div>
             <AmpBar c={pc} />
             <div className="row">
               <span className="tiny muted">{pc.g} von {pc.t} grün</span><span className="spacer" />
-              <button type="button" className="btn small" title={`Gemischte Runde aus allen Themen: ${topics.filter((x) => inTeil(x, p)).map((x) => x.n).join(", ")}`} onClick={() => startRound(learnList(S, "part", p, area))}><Ic name="play" cls="ic xs" /> {p === "wiso" ? "SoWi" : p === "t1" ? "Teil 1" : "Teil 2"} gemischt</button>
+              <button type="button" className="btn small" title={`Gemischte Runde aus allen Themen: ${topics.filter((x) => inTeil(x, p)).map((x) => x.n).join(", ")}`} onClick={() => startRound(learnList(S, "part", p, area))}><Ic name="play" cls="ic xs" /> {p === "wiso" ? (area === "fisi" ? "WiSo" : "SoWi") : p === "t1" ? "Teil 1" : "Teil 2"} gemischt</button>
             </div>
           </section>
-        )) : topics.map((topic) => {
-          const tc = counts(S, topicQ(S, topic.id, area));
-          return <section key={topic.id} className={`card part t-${tcolOf(topic.teil)}`}>
-            <div className="row"><Ring frac={tc.pct} size={58} sw={6} cls="anim" inner={<span className="tiny">{Math.round(tc.pct * 100)}%</span>} /><div style={{ flex: 1, minWidth: 0 }}><span className="tiny muted">{topic.teil} · {tc.t} Fragen</span><h3>{topic.n}</h3></div></div>
-            <AmpBar c={tc} />
-            <div className="row"><span className="tiny muted">{tc.open} offen</span><span className="spacer" /><button type="button" className="btn small" onClick={() => startRound(learnList(S, "learn", topic.id, area))}><Ic name="play" cls="ic xs" /> Lernen</button></div>
-          </section>;
-        })}
+        ))}
       </div>
       <div className="grid2">
         <section className="card">

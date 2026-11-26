@@ -33,7 +33,7 @@ describe("Kataloge", () => {
       expect(existing.has(q.id), q.id).toBe(false);
       expect(topics.has(q.topic), q.id).toBe(true);
     });
-    expect(new Set(systemIntegration.topics.map((topic) => topic.teil))).toEqual(new Set(["Teil 2", "SoWi"]));
+    expect(new Set(systemIntegration.topics.map((topic) => topic.teil))).toEqual(new Set(["Teil 1", "Teil 2", "SoWi"]));
     expect(systemIntegration.questions.filter((q) => q.topic === "si-sicherheit")).toHaveLength(26);
     expect(systemIntegration.questions.filter((q) => q.topic === "si-betrieb")).toHaveLength(26);
   });
@@ -63,6 +63,14 @@ describe("Kataloge", () => {
       expect(q.q, q.id).toMatch(/\(\d+ P\.\)$/);
       expect(q.type === "card" && q.note, q.id).toContain("Erwartungshorizont");
     });
+  });
+
+  it("FISI-Themen gehören zu Teil 1 (Konzeption/Administration), Teil 2 (Netzwerke) oder WiSo", () => {
+    const teil = Object.fromEntries(systemIntegration.topics.map((t) => [t.id, t.teil]));
+    expect(Object.values(teil).every((t) => ["Teil 1", "Teil 2", "SoWi"].includes(t))).toBe(true);
+    expect([teil["si-netzwerk"], teil["si-adressierung"]]).toEqual(["Teil 2", "Teil 2"]);
+    expect([teil["si-systeme"], teil["si-sicherheit"], teil["si-betrieb"], teil["si-projekt"]]).toEqual(["Teil 1", "Teil 1", "Teil 1", "Teil 1"]);
+    expect(teil["si-wiso"]).toBe("SoWi");
   });
 
   it("wechselt Katalogdaten, ohne den FIAE-Standard zu verändern", () => {

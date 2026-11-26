@@ -27,12 +27,7 @@ const search = z.object({ thema: z.string().optional().catch(undefined) }); // f
 export const Route = createFileRoute("/lernen/")({ validateSearch: search, component: Lernen });
 
 const GROUPS: [string, (t: Topic) => boolean][] = [["Planen · Teil 1", (t) => t.teil === "Teil 1"], ["Algorithmen · Teil 2", (t) => t.teil === "Teil 2"], ["Beide IT-Teile", (t) => t.teil === "Teil 1 + 2"], ["Wirtschafts- und Sozialkunde · SoWi", (t) => t.teil === "SoWi"]];
-const FISI_GROUPS: [string, (t: Topic) => boolean][] = [
-  ["Analyse & Entwicklung von Netzwerken", (t) => t.id === "si-netzwerk" || t.id === "si-adressierung"],
-  ["Konzeption & Administration von IT-Systemen", (t) => t.id === "si-systeme" || t.id === "si-sicherheit" || t.id === "si-betrieb"],
-  ["Projekt Systemintegration", (t) => t.id === "si-projekt"],
-  ["Wirtschafts- und Sozialkunde", (t) => t.id === "si-wiso"],
-];
+const FISI_GROUPS: [string, (t: Topic) => boolean][] = [["Konzeption & Administration von IT-Systemen · Teil 1", (t) => t.teil === "Teil 1"], ["Analyse & Entwicklung von Netzwerken · Teil 2", (t) => t.teil === "Teil 2"], ["Wirtschafts- und Sozialkunde · SoWi", (t) => t.teil === "SoWi"]];
 
 function Lernen() {
   const { thema } = Route.useSearch();
@@ -48,7 +43,7 @@ function TopicList() {
   const area = useLearningArea((s) => s.area), TOPICS = catalogFor(area).topics;
   const startRound = useStartRound(), openTopic = useOpenTopic();
   const all = allQ(S, area), c = counts(S, all), markN = all.filter((q) => S.mark[q.id]).length, dueN = dueCount(S, all);
-  const filters: Tf[] = area === "fiae" ? ["alle", "Teil 1", "Teil 2", "SoWi"] : ["alle", ...new Set(TOPICS.map((t) => t.teil as Tf))];
+  const filters: Tf[] = ["alle", "Teil 1", "Teil 2", "SoWi"];
   const groups = area === "fiae" ? GROUPS : FISI_GROUPS;
   const show = (t: Topic) => f === "alle" || (f === "SoWi" ? t.teil === "SoWi" : t.teil === f || ((f === "Teil 1" || f === "Teil 2") && t.teil === "Teil 1 + 2"));
   const kind = (k: Kind) => startRound(learnList(S, k, undefined, area));
