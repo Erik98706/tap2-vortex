@@ -4,7 +4,10 @@
  * Ergebnisse gehen über den Lernstand-Speicher (store/progress.ts) in S.runs.
  */
 import { create } from "zustand";
+import { asState, fromState, startFisiRun } from "@/lib/fisi-pruefung";
 import { finishReal, restoreRun, startRun, submitRun, type Mode, type PkRun } from "@/lib/pruefung";
+import { useLearningArea } from "./learning-area";
+import { useFisi } from "./fisi-lernen";
 import { useProgress } from "./progress";
 
 export const KEY_RUN = "tap2coach-run";
@@ -34,18 +37,25 @@ export const usePruefung = create<Store>((set, get) => ({
   setConfirm: (confirm) => set({ confirm }),
   start: (mode, teil) => {
     const pk = { mode: mode ?? get().pk.mode, teil: teil ?? get().pk.teil };
-    const run = startRun(useProgress.getState().S, pk.mode, pk.teil);
-    keep(run); set({ pk, run, confirm: null, now: Date.now() });
+    const S = useProgress.getState().S, fisi = useLearningArea.getState().area === "fisi";
+    const run = fisi ? startFisiRun(S, pk.mode, pk.teil) : startRun(S, pk.mode, pk.teil);
+    keep(run); set({ pk: { ...pk, teil: run.teil }, run, confirm: null, now: Date.now() });
   },
   patch: (f) => { const r = get().run; if (!r) return; const run = f(r); keep(run); set({ run }); },
   submit: (auto) => {
     const r = get().run; if (!r) return;
     const P = useProgress.getState(), x = submitRun(P.S, r, auto);
-    if (x.S !== P.S) P.applySynced(x.S); // Simulation: Antworten und Ergebnis speichern
+    if (r.area === "fisi") { // Antworten zählen im Lernstand, das Ergebnis gehört in den FISI-Speicher
+      if (x.S !== P.S) { const F = useFisi.getState().F, run = x.S.runs[x.S.runs.length - 1]; P.applySynced({ ...x.S, runs: P.S.runs }); if (run) useFisi.getState().set({ ...F, runs: [...F.runs, run] }); }
+    } else if (x.S !== P.S) P.applySynced(x.S); // Simulation: Antworten und Ergebnis speichern
     keep(x.run); set({ run: x.run, confirm: null });
   },
   finish: () => {
     const r = get().run; if (!r) return;
+    if (r.area === "fisi") {
+      const x = finishReal(asState(useFisi.getState().F), r);
+      useFisi.getState().set(fromState(x.S)); keep(x.run); set({ run: x.run }); return;
+    }
     const P = useProgress.getState(), x = finishReal(P.S, r);
     void import("./livesync").then((m) => x.evs.forEach(([k, v]) => m.recordEv("e", k, v))); // wie syncEv("e", …) in logCause()
     P.applySynced(x.S);
@@ -53,6 +63,7 @@ export const usePruefung = create<Store>((set, get) => ({
   },
   close: () => { keep(null); set({ run: null, confirm: null }); },
   deleteRun: (ts) => {
+    if (useLearningArea.getState().area === "fisi") { useFisi.getState().deleteRun(ts); set({ confirm: null }); return; }
     const P = useProgress.getState();
     void import("./livesync").then((m) => m.recordEv("r", String(ts))); // Lösch-Ereignis für den Sync
     P.applySynced({ ...P.S, runs: P.S.runs.filter((x) => x.ts !== ts) });

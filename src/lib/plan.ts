@@ -27,6 +27,8 @@ export function buildPlan(S: State, from = today(), exam = EXAM_DAY, area: Learn
   if (area === "fiae") {
     let k = 0; days.filter((d) => wdOf(d) === 0 && d !== last).forEach((d) => plan[d].push({ kind: "sim", teil: (["t1", "t2", "wiso"] as const)[k++ % 3] }));
     days.filter((d) => wdOf(d) === 3 && d !== last).forEach((d) => plan[d].push({ kind: "op" }));
+  } else { // FISI: sonntags Real-Klausur im Wechsel Teil 1 / Teil 2 (keine WiSo-Simulation, kein Operator-Trainer)
+    let k = 0; days.filter((d) => wdOf(d) === 0 && d !== last).forEach((d) => plan[d].push({ kind: "sim", teil: (["t1", "t2"] as const)[k++ % 2] }));
   }
   plan[last].push({ kind: "final" });
   return { days, plan, per, total };

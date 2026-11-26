@@ -16,37 +16,45 @@
       "teil": "Teil 2",
       "prio": "Muss",
       "ic": "server",
-      "th": [],
+      "th": [
+        "FP01"
+      ],
       "decks": [],
       "cats": []
     },
     {
       "id": "si-systeme",
       "n": "Systeme & Virtualisierung",
-      "teil": "Teil 2",
+      "teil": "Teil 1",
       "prio": "Muss",
       "ic": "server",
-      "th": [],
+      "th": [
+        "FP09"
+      ],
       "decks": [],
       "cats": []
     },
     {
       "id": "si-sicherheit",
       "n": "IT-Sicherheit & Datenschutz",
-      "teil": "Teil 2",
+      "teil": "Teil 1",
       "prio": "Muss",
       "ic": "lock",
-      "th": [],
+      "th": [
+        "FP10"
+      ],
       "decks": [],
       "cats": []
     },
     {
       "id": "si-betrieb",
       "n": "Betrieb & Fehleranalyse",
-      "teil": "Teil 2",
+      "teil": "Teil 1",
       "prio": "Wichtig",
       "ic": "check",
-      "th": [],
+      "th": [
+        "FP11"
+      ],
       "decks": [],
       "cats": []
     }

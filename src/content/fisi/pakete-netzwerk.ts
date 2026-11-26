@@ -1,0 +1,128 @@
+import type { Paket } from "../schema";
+
+// Lernpakete Teil 2 · Analyse und Entwicklung von Netzwerken. Eigenständig formuliert (keine Prüfungstexte).
+// IDs (FP01 …) und die Zuordnung zu Aufgaben (ueb) sind Schlüssel und dürfen sich nicht ändern.
+const PRIO = { m: "Muss", w: "Wichtig" } as const;
+
+export const PAKETE_NETZWERK: Paket[] = [
+  {
+    id: "FP01", titel: "Netzwerkgrundlagen: Geräte, Gateway, DHCP und DNS", teil: "Teil 2", prio: PRIO.m, h: 2,
+    relevanz: "Die Grundlage jeder Netzwerkaufgabe: Ohne sicheres Verständnis von Switch, Router, Gateway, DHCP und DNS lassen sich Netzpläne nicht lesen und Fehler nicht eingrenzen. Fast jede Prüfung enthält Aufgaben, die darauf aufbauen.",
+    kern: [
+      ["Switch und Router", "Ein Switch verbindet Geräte im selben Netz und leitet Frames anhand der MAC-Adresse weiter (Schicht 2). Ein Router verbindet verschiedene Netze und entscheidet anhand der IP-Zieladresse (Schicht 3). Geräte in unterschiedlichen Netzen kommunizieren nur über einen Router oder Layer-3-Switch."],
+      ["Standardgateway", "Der Standardgateway ist die Adresse des Routers im eigenen Subnetz, an den ein Host alle Pakete für fremde Netze schickt. Er muss im eigenen Subnetz liegen, sonst ist er nicht erreichbar. Fehlt er oder ist er falsch, funktioniert nur die Kommunikation im eigenen Netz."],
+      ["DHCP und DNS", "DHCP vergibt dynamisch IP-Adresse, Subnetzmaske, Gateway und DNS-Server für eine begrenzte Zeit (Lease). DNS übersetzt Namen in IP-Adressen. Eine Adresse aus 169.254.0.0/16 deutet auf einen nicht erreichbaren DHCP-Server hin, eine funktionierende IP-Verbindung ohne Namensauflösung auf ein DNS-Problem."],
+      ["Topologien", "Stern: alle Geräte an einem zentralen Switch, im LAN heute Standard. Fällt der Switch aus, fällt das Netz aus. Eine vermaschte Topologie bietet Redundanz, braucht aber ein Verfahren gegen Schleifen wie das Spanning Tree Protocol. Bus und Ring sind im LAN kaum noch relevant."],
+      ["Übertragungsmedien", "Twisted-Pair-Kupferkabel (z. B. Cat 6) überbrücken bis 100 m. Glasfaser eignet sich für große Entfernungen und hohe Datenraten: Multimode im Gebäude, Singlemode über mehrere Kilometer. Glasfaser ist unempfindlich gegen elektromagnetische Störungen."],
+      ["Bandbreite, Durchsatz, Latenz", "Die Bandbreite ist die maximale Datenrate eines Links, der Durchsatz die tatsächlich erreichte Rate (wegen Overhead und Last niedriger). Die Latenz ist die Verzögerung. Übertragungszeit = Datenmenge ÷ Datenrate; 1 Byte = 8 Bit."],
+    ],
+    fallen: ["Bit und Byte verwechseln: Mbit/s sind nicht MB/s.", "Das Gateway außerhalb des eigenen Subnetzes angeben.", "Switch und Router vermischen: Ein Switch kennt keine IP-Netze.", "Einheiten (GB, Gbit, MiB) in der Rechnung nicht angleichen."],
+    ziele: ["Den Unterschied zwischen Switch und Router erläutern", "Aufgaben von Gateway, DHCP und DNS beschreiben", "Eine Übertragungszeit mit Bit/Byte-Umrechnung berechnen", "Topologien und Medien zu einer Anforderung passend auswählen"],
+    ueb: [],
+  },
+  {
+    id: "FP02", titel: "IPv4-Adressierung und Subnetting", teil: "Teil 2", prio: PRIO.m, h: 2.5,
+    relevanz: "Subnetting wird regelmäßig als Rechenaufgabe verlangt und liefert sichere Punkte, wenn das Verfahren sitzt. Es steckt außerdem in vielen Fehlerbildern (falsche Maske, falsches Gateway).",
+    kern: [
+      ["Adresse und Maske", "Eine IPv4-Adresse hat 32 Bit, geschrieben als vier Oktette. Die Subnetzmaske (oder das Präfix /n) trennt Netz- und Hostanteil: /24 ist 255.255.255.0, /22 ist 255.255.252.0. Die Netzadresse ergibt sich aus Adresse UND Maske."],
+      ["Hostzahl und Broadcast", "Bei h Hostbits gibt es 2^h − 2 nutzbare Adressen, weil die Netzadresse (alle Hostbits 0) und die Broadcast-Adresse (alle Hostbits 1) nicht vergeben werden. Beispiel /26: 6 Hostbits, also 2^6 − 2 = 62 nutzbare Hosts."],
+      ["Subnetting in vier Schritten", "1. Hostbedarf bestimmen und die kleinste Potenz mit 2^h − 2 ≥ Bedarf finden. 2. Präfix = 32 − h. 3. Blockgröße = 2^h; die Netzadressen folgen im Abstand der Blockgröße. 4. Erste Adresse = Netz + 1, letzte = Broadcast − 1. Die größten Netze zuerst vergeben, damit keine Lücken entstehen (VLSM)."],
+      ["Blockgröße im interessanten Oktett", "Das Oktett, in dem die Maske nicht 255 oder 0 ist, bestimmt die Blockgröße: 256 − Maskenwert. Bei 255.255.252.0 ist 256 − 252 = 4, die Netze beginnen also bei 10.20.0.0, 10.20.4.0, 10.20.8.0 und so weiter."],
+      ["Private und besondere Bereiche", "Privat (RFC 1918): 10.0.0.0/8, 172.16.0.0/12 (172.16.0.0 bis 172.31.255.255) und 192.168.0.0/16. Sie werden im Internet nicht geroutet. 127.0.0.0/8 ist Loopback, 169.254.0.0/16 Link-Local (APIPA)."],
+      ["Im selben Subnetz?", "Zwei Hosts liegen im selben Subnetz, wenn die Netzadressen beider Adressen (mit derselben Maske) übereinstimmen. Eine falsche Maske macht Nachbarn unerreichbar oder legt das Gateway in ein anderes Netz."],
+    ],
+    fallen: ["Die Hostzahl ohne Abzug von Netz- und Broadcast-Adresse angeben.", "Präfix und Maske verwechseln (/22 ist nicht 255.255.255.0).", "Subnetze nicht an der Blockgröße ausrichten.", "Den Bedarf ohne Gateway, Reserve und Wachstum berechnen."],
+    ziele: ["Netz-, Broadcast- und Hostbereich einer Adresse berechnen", "Ein Netz in passend große Subnetze teilen", "Präfixlänge und Subnetzmaske ineinander umrechnen", "Private Adressbereiche und Sonderadressen erkennen"],
+    ueb: ["FN1"],
+  },
+  {
+    id: "FP03", titel: "IPv6", teil: "Teil 2", prio: PRIO.w, h: 1.5,
+    relevanz: "IPv6 kommt in Netzwerkaufgaben vor, meist als Kurzform lesen, Adresstypen unterscheiden oder die Einführung planen. Der Stoff ist überschaubar und gut lernbar.",
+    kern: [
+      ["Aufbau und Schreibweise", "Eine IPv6-Adresse hat 128 Bit, geschrieben als acht Blöcke mit je vier Hexadezimalziffern. Führende Nullen dürfen entfallen, genau eine zusammenhängende Nullfolge darf durch :: ersetzt werden. Üblich ist ein /64-Präfix für ein Subnetz, der Rest ist der Interface-Identifier."],
+      ["Adresstypen", "Link-Local (fe80::/10) gilt nur im direkten Segment. Unique Local (fc00::/7, in der Praxis fd00::/8) ist intern routbar. Global Unicast (2000::/3) ist weltweit eindeutig. Multicast beginnt mit ff. ::1 ist Loopback. Einen Broadcast gibt es nicht."],
+      ["Adressvergabe", "Bei SLAAC erhält der Client das Präfix aus dem Router Advertisement und bildet den Interface-Identifier selbst. Mit DHCPv6 lassen sich Adressen und weitere Parameter zentral zuweisen. Vor der Nutzung prüft die Duplicate Address Detection, ob die Adresse eindeutig ist."],
+      ["NDP und ICMPv6", "Das Neighbor Discovery Protocol ersetzt ARP und findet Nachbarn und Router. Es läuft über ICMPv6. Wer ICMPv6 pauschal sperrt, stört deshalb die Adressauflösung und die Path-MTU-Ermittlung."],
+      ["Einführung und Übergang", "Dual-Stack betreibt IPv4 und IPv6 parallel. Tunnel transportieren IPv6 über IPv4-Netze, NAT64 übersetzt zwischen beiden Welten. Für Namen braucht es AAAA-Einträge im DNS, und Firewallregeln gelten getrennt für IPv4 und IPv6."],
+      ["Subnetze berechnen", "Aus einem /48-Präfix lassen sich 2^(64 − 48) = 65.536 Subnetze mit /64 bilden, aus einem /56 sind es 256. Die Rechnung läuft über die Zahl der Bits zwischen Präfix und /64."],
+    ],
+    fallen: ["Zweimal :: in einer Adresse verwenden.", "ICMPv6 komplett filtern.", "IPv6 wie IPv4 behandeln und NAT erwarten.", "Den AAAA-Eintrag im DNS oder die IPv6-Firewallregeln vergessen."],
+    ziele: ["Eine Adresse in Kurzform schreiben und lesen", "Link-Local-, Unique-Local- und Global-Unicast-Adressen unterscheiden", "SLAAC beschreiben", "Die Zahl der /64-Subnetze eines Präfixes berechnen"],
+    ueb: [],
+  },
+  {
+    id: "FP04", titel: "Protokolle und Dienste: OSI, TCP/UDP, DNS, DHCP, Mail", teil: "Teil 2", prio: PRIO.m, h: 2,
+    relevanz: "Ports, Protokolle und die Schichten des OSI-Modells brauchst du für die Fehlersuche und für Firewallregeln. Die Zuordnung Dienst und Port wird oft direkt abgefragt.",
+    kern: [
+      ["OSI-Modell", "Schicht 1 Bitübertragung (Kabel, Funk), 2 Sicherung (Ethernet, MAC, Switch), 3 Vermittlung (IP, Router), 4 Transport (TCP, UDP, Ports), 7 Anwendung (HTTP, DNS, SMTP). Fehler grenzt man von unten nach oben ein: erst Kabel und Link, dann Adressierung, dann Dienst."],
+      ["TCP und UDP", "TCP ist verbindungsorientiert (Drei-Wege-Handshake), bestätigt den Empfang, ordnet die Segmente und wiederholt verlorene. UDP ist verbindungslos und ohne Zustellgarantie, dafür schlank. TCP für Web, Mail und Dateiübertragung, UDP für DNS-Abfragen, VoIP und Streaming."],
+      ["Wichtige Ports", "HTTP 80, HTTPS 443, SSH 22, FTP 21, SMTP 25 (Einlieferung durch Clients 587), IMAP 143 (mit TLS 993), POP3 110 (mit TLS 995), DNS 53, DHCP 67/68 (UDP), NTP 123 (UDP), SMB 445, RDP 3389, SNMP 161 (UDP), Syslog 514 (UDP)."],
+      ["DNS", "Der Resolver fragt bei Bedarf Root-, TLD- und autoritative Server ab und speichert die Antwort für die TTL im Cache. Records: A (IPv4), AAAA (IPv6), CNAME (Alias), MX (Mailserver), NS (Nameserver), PTR (Rückwärtsauflösung), TXT (z. B. SPF)."],
+      ["DHCP-Ablauf", "Discover (Client sucht per Broadcast), Offer (Server bietet eine Adresse an), Request (Client fordert sie an), Acknowledge (Server bestätigt). Der Client nutzt die Adresse für die Lease-Dauer. Reservierungen binden eine Adresse an eine MAC-Adresse. Über Netzgrenzen leitet ein DHCP-Relay weiter."],
+      ["E-Mail-Protokolle", "SMTP versendet und leitet weiter, IMAP verwaltet das Postfach auf dem Server, POP3 holt Nachrichten ab. Gegen gefälschte Absender helfen SPF, DKIM und DMARC, die als DNS-Einträge hinterlegt werden."],
+    ],
+    fallen: ["TCP und UDP verwechseln oder die Begründung weglassen.", "Ports falsch zuordnen (HTTPS ist 443, nicht 80).", "Bei DNS nicht zwischen den Recordtypen unterscheiden.", "Die vier DHCP-Schritte in falscher Reihenfolge nennen."],
+    ziele: ["Die OSI-Schichten Beispielen zuordnen", "TCP und UDP begründet unterscheiden", "Die wichtigsten Ports und Protokolle nennen", "Den Ablauf von DHCP und DNS beschreiben"],
+    ueb: ["FN2"],
+  },
+  {
+    id: "FP05", titel: "Switching, VLAN und WLAN", teil: "Teil 2", prio: PRIO.m, h: 2,
+    relevanz: "VLANs und WLAN-Planung tauchen als Planungs- und Konfigurationsaufgaben auf. Wichtig sind das Zusammenspiel von Access- und Trunk-Port und die Absicherung des Funknetzes.",
+    kern: [
+      ["MAC-Adresstabelle", "Ein Switch liest die Quell-MAC-Adresse jedes Frames, ordnet sie dem Eingangsport zu und leitet bekannte Ziele gezielt weiter. Unbekannte Ziele werden an alle Ports des VLANs geflutet. Einträge verfallen nach einer Zeit ohne Verkehr."],
+      ["VLAN", "Ein VLAN bildet eine eigene Broadcast-Domäne auf demselben Switch. Ein Access-Port gehört genau einem VLAN, ein Trunk-Port transportiert mehrere VLANs mit 802.1Q-Tags. Verkehr zwischen VLANs braucht einen Router oder Layer-3-Switch, dort lassen sich Firewallregeln oder ACLs anwenden."],
+      ["Router on a Stick", "Der Router hängt über einen Trunk am Switch und erhält je VLAN ein Subinterface mit passender VLAN-ID und einer Adresse aus dem jeweiligen Netz. Diese Adresse ist das Standardgateway der Clients des VLANs."],
+      ["Redundanz und Leistung", "Das Spanning Tree Protocol verhindert Schleifen, indem es redundante Pfade blockiert und bei Ausfall freigibt. Link Aggregation bündelt mehrere Ports zu einem logischen Link für mehr Bandbreite und Ausfallsicherheit. Power over Ethernet (802.3af/at/bt) versorgt Access Points oder Telefone über das Netzwerkkabel."],
+      ["WLAN-Grundlagen", "Es gibt die Bänder 2,4 GHz (große Reichweite, wenige Kanäle, viele Störungen), 5 GHz (mehr Kanäle, höhere Raten, kürzere Reichweite) und neuere Standards mit 6 GHz. Im 2,4-GHz-Band überlappen sich nur die Kanäle 1, 6 und 11 nicht. Die SSID ist der Netzname."],
+      ["WLAN absichern", "WPA2 oder WPA3 verschlüsseln den Funkverkehr. Im Unternehmen sind Enterprise-Verfahren mit 802.1X und RADIUS sinnvoll, weil sich jeder Benutzer einzeln anmeldet. Gäste kommen in ein eigenes VLAN mit eingeschränktem Zugriff. Standardkennwörter ändern und die Firmware aktuell halten."],
+    ],
+    fallen: ["Ein VLAN als Sicherheitsgrenze betrachten, ohne Regeln zwischen den VLANs.", "Beim Trunk die zugelassenen VLANs nicht abstimmen.", "Zum WLAN nur die Verschlüsselung nennen, nicht Trennung und Authentifizierung.", "Kanäle im 2,4-GHz-Band überlappend planen."],
+    ziele: ["Den Aufbau der MAC-Adresstabelle erläutern", "Access- und Trunk-Port konfigurieren und Inter-VLAN-Routing beschreiben", "Maßnahmen zur WLAN-Absicherung nennen", "Die Eigenschaften von 2,4 GHz und 5 GHz vergleichen"],
+    ueb: ["FN4"],
+  },
+  {
+    id: "FP06", titel: "Routing, NAT und Internetanbindung", teil: "Teil 2", prio: PRIO.m, h: 2,
+    relevanz: "Routingtabellen lesen, NAT erklären und eine Internetanbindung planen sind typische Aufgaben in Teil 2. Die Rechenaufgaben zur Datenrate bringen sichere Punkte.",
+    kern: [
+      ["Routingtabelle lesen", "Ein Router wählt unter allen passenden Einträgen den mit dem längsten Präfix (Longest Prefix Match). Direkt verbundene Netze werden ohne nächsten Hop zugestellt. Die Default-Route 0.0.0.0/0 fängt alle Ziele ohne spezifischeren Eintrag auf."],
+      ["Statisch und dynamisch", "Statische Routen trägt man von Hand ein: einfach, aber pflegeaufwendig. Dynamische Protokolle tauschen Routen aus und passen sich bei Ausfällen an, etwa OSPF innerhalb einer Organisation und BGP zwischen Providern. Die Metrik bewertet mehrere Wege zum selben Ziel."],
+      ["NAT und PAT", "NAT übersetzt Adressen zwischen Netzen. Bei PAT teilen sich viele private Adressen eine öffentliche Adresse und werden über Quellports unterschieden. Der Router merkt sich die Zuordnung in der NAT-Tabelle und setzt Antworten damit zurück. NAT ersetzt keine Firewall."],
+      ["Portweiterleitung", "Soll ein interner Server aus dem Internet erreichbar sein, leitet der Router einen Port der öffentlichen Adresse an die interne Adresse weiter (Destination NAT), zum Beispiel TCP 443 an den Webserver. Dazu gehört eine passende Firewallregel."],
+      ["Internetanbindung", "Der Router erhält vom Provider die WAN-Adresse und das Gateway (per DHCP, fest oder PPPoE bei DSL). Für Ausfallsicherheit ist ein zweiter Provider mit Failover möglich. Gemeinsame Ursachen wie dieselbe Trasse, Stromversorgung oder der einzelne Router bleiben ein Single Point of Failure."],
+      ["Datenrate rechnen", "Dauer = Datenmenge ÷ Datenrate. Erst Einheiten angleichen: 1 Byte = 8 Bit, 1 GB = 8 Gbit. Praktisch erreicht man nur einen Teil der Bandbreite, deshalb ist ein Wirkungsgrad (z. B. 80 %) oft vorgegeben."],
+    ],
+    fallen: ["Statt des längsten Präfixes die zuerst eingetragene Route wählen.", "NAT als Sicherheitsmaßnahme darstellen.", "Bei der Portweiterleitung Protokoll oder internen Port vergessen.", "Beim Rechnen Byte und Bit oder Mbit/s und MB/s mischen."],
+    ziele: ["Den nächsten Hop aus einer Routingtabelle bestimmen", "PAT und Portweiterleitung beschreiben", "Eine Übertragungsdauer berechnen", "Eine redundante Internetanbindung beurteilen"],
+    ueb: ["FN1", "FN2"],
+  },
+  {
+    id: "FP07", titel: "Firewall, DMZ und VPN", teil: "Teil 2", prio: PRIO.m, h: 2,
+    relevanz: "Absicherung ist ein Standardthema: Firewallregeln formulieren, eine DMZ begründen, VPN-Arten unterscheiden und Angriffe einordnen. Regeln mit Quelle, Ziel, Dienst und Aktion werden oft ausdrücklich verlangt.",
+    kern: [
+      ["Firewall-Arten", "Ein Paketfilter prüft Adressen und Ports. Eine Stateful Firewall merkt sich Verbindungen und lässt Antworten automatisch zu. Application-Layer-Firewalls, Proxys und die Web Application Firewall (WAF) prüfen Inhalte auf Anwendungsebene. Grundprinzip ist Default Deny: Erlaubt wird nur, was ausdrücklich freigegeben ist."],
+      ["Regeln richtig formulieren", "Jede Regel nennt Quelle, Ziel, Dienst (Protokoll und Port) und Aktion. Regeln werden von oben nach unten ausgewertet, die erste passende gilt. Spezifische Regeln stehen deshalb vor allgemeinen, am Ende steht die Verwerfen-Regel."],
+      ["DMZ", "Die DMZ ist ein eigenes Netz zwischen Internet und internem Netz für Server, die von außen erreichbar sein müssen (Web, Mail, Reverse-Proxy). Aus dem Internet geht nur der benötigte Dienst in die DMZ, aus der DMZ gibt es höchstens eng begrenzte Zugriffe ins LAN."],
+      ["VPN", "Site-to-Site verbindet zwei Netze über einen Tunnel zwischen den Gateways, die Clients merken nichts. Remote Access baut ein einzelner Rechner zum VPN-Gateway auf. IPsec sichert Vertraulichkeit (Verschlüsselung), Integrität (Hash) und Authentizität (Zertifikate oder Schlüssel). Beim Split-Tunneling läuft nur der Firmenverkehr durch den Tunnel."],
+      ["IDS und IPS", "Ein Intrusion Detection System erkennt Angriffsmuster und meldet sie. Ein Intrusion Prevention System greift im Datenstrom ein und blockiert. Gegen wiederholte Anmeldeversuche helfen Sperren der Quelle, Schlüssel statt Kennwort, Mehr-Faktor-Authentifizierung und kein direkter Zugang aus dem Internet."],
+      ["TLS-Zertifikate", "Der Browser prüft, ob der Name zur Adresse passt, ob das Zertifikat gültig ist, von einer vertrauenswürdigen Zertifizierungsstelle über eine Kette stammt und nicht widerrufen wurde (Sperrliste oder OCSP)."],
+    ],
+    fallen: ["Die Regeln ohne Richtung und ohne Port angeben.", "Eine Allow-Any-Regel als Lösung vorschlagen.", "Das VPN nur als Verschlüsselung beschreiben und die Authentifizierung auslassen.", "IDS und IPS verwechseln."],
+    ziele: ["Firewallregeln aus einer Anforderung ableiten", "Eine DMZ-Architektur zeichnen und begründen", "Site-to-Site- und Remote-Access-VPN unterscheiden", "Prüfungen beim TLS-Zertifikat nennen"],
+    ueb: ["FN3"],
+  },
+  {
+    id: "FP08", titel: "Fehleranalyse im Netzwerk", teil: "Teil 2", prio: PRIO.m, h: 2,
+    relevanz: "Fehlerbilder deuten und eine Eingrenzung beschreiben kommt immer wieder vor. Wer die Befehle und typischen Ursachen kennt, holt hier schnell Punkte.",
+    kern: [
+      ["Systematisch eingrenzen", "Von unten nach oben vorgehen: Physik (Kabel, Link-LED, WLAN), IP-Konfiguration, Standardgateway, Ziel per IP, Namensauflösung, dann Dienst und Port samt Firewall. So wird deutlich, auf welcher Schicht der Fehler liegt."],
+      ["Diagnosebefehle", "ping prüft die Erreichbarkeit, tracert (Windows) beziehungsweise traceroute (Linux) zeigt den Weg und den Fehlerabschnitt, ipconfig /all beziehungsweise ip addr die IP-Konfiguration, nslookup oder dig die Namensauflösung, netstat -an beziehungsweise ss die Verbindungen und offenen Ports, arp -a die MAC-Zuordnung."],
+      ["Typische Fehlerbilder", "169.254.x.x: DHCP nicht erreicht. Eigenes Subnetz geht, fremde nicht: Gateway oder Maske falsch. IP geht, Name nicht: DNS-Problem. Ping geht, Dienst nicht: Port, Dienst oder Firewall. Wechselnde Erreichbarkeit: doppelte IP-Adresse."],
+      ["Ursachen im Segment", "Falsche VLAN-Zuordnung eines Ports, ein Trunk ohne das benötigte VLAN, ein fehlendes DHCP-Relay, ein erschöpfter Adresspool oder ein Switchport mit Fehlern (CRC, Duplex) führen zu typischen Ausfällen."],
+      ["Messwerte einordnen", "Latenz zeigt die Verzögerung, Paketverlust Überlastung oder fehlerhafte Übertragung, der Durchsatz die tatsächlich erreichte Datenrate. Mehrere Messpunkte und Zeitpunkte erleichtern die Eingrenzung."],
+      ["Protokollieren und überwachen", "Syslog sammelt Meldungen zentral, SNMP liefert Auslastung und Zustände, Monitoring alarmiert bei Schwellwerten. Änderungen und Ergebnisse der Fehlersuche dokumentieren, damit sie reproduzierbar bleiben."],
+    ],
+    fallen: ["Bei „Dienst nicht erreichbar“ nur Ping als Beweis anführen.", "Mehrere Änderungen gleichzeitig vornehmen und die Ursache nicht mehr erkennen.", "Das Gateway nicht auf Erreichbarkeit prüfen.", "Windows- und Linux-Befehle durcheinanderbringen."],
+    ziele: ["Eine Fehlersuche Schritt für Schritt beschreiben", "Zu jedem Befehl den Einsatzzweck nennen", "Fehlerbilder wie 169.254.x.x oder Gateway-Fehler deuten", "Latenz, Paketverlust und Durchsatz unterscheiden"],
+    ueb: ["FN1", "FN4"],
+  },
+];

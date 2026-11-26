@@ -21,18 +21,14 @@ import { BezLoesung } from "@/components/BezVisual";
 import { AmpBar, Amp, Legend, TimerBox, TopicRow } from "@/components/lernen/bits";
 import { UebItem } from "@/components/aufgaben/UebItem";
 import { uebOf } from "@/lib/aufgaben";
+import { fisiUE } from "@/lib/fisi-pruefung";
 import { useAnimRings, useLernenUI, useOpenTopic, useStartRound, type Tf, type TTab } from "@/components/lernen/ui";
 
 const search = z.object({ thema: z.string().optional().catch(undefined) }); // fehlerhafte Links nie zum Absturz führen lassen
 export const Route = createFileRoute("/lernen/")({ validateSearch: search, component: Lernen });
 
 const GROUPS: [string, (t: Topic) => boolean][] = [["Planen · Teil 1", (t) => t.teil === "Teil 1"], ["Algorithmen · Teil 2", (t) => t.teil === "Teil 2"], ["Beide IT-Teile", (t) => t.teil === "Teil 1 + 2"], ["Wirtschafts- und Sozialkunde · SoWi", (t) => t.teil === "SoWi"]];
-const FISI_GROUPS: [string, (t: Topic) => boolean][] = [
-  ["Analyse & Entwicklung von Netzwerken", (t) => t.id === "si-netzwerk" || t.id === "si-adressierung"],
-  ["Konzeption & Administration von IT-Systemen", (t) => t.id === "si-systeme" || t.id === "si-sicherheit" || t.id === "si-betrieb"],
-  ["Projekt Systemintegration", (t) => t.id === "si-projekt"],
-  ["Wirtschafts- und Sozialkunde", (t) => t.id === "si-wiso"],
-];
+const FISI_GROUPS: [string, (t: Topic) => boolean][] = [["Konzeption & Administration von IT-Systemen · Teil 1", (t) => t.teil === "Teil 1"], ["Analyse & Entwicklung von Netzwerken · Teil 2", (t) => t.teil === "Teil 2"], ["Wirtschafts- und Sozialkunde · SoWi", (t) => t.teil === "SoWi"]];
 
 function Lernen() {
   const { thema } = Route.useSearch();
@@ -48,7 +44,7 @@ function TopicList() {
   const area = useLearningArea((s) => s.area), TOPICS = catalogFor(area).topics;
   const startRound = useStartRound(), openTopic = useOpenTopic();
   const all = allQ(S, area), c = counts(S, all), markN = all.filter((q) => S.mark[q.id]).length, dueN = dueCount(S, all);
-  const filters: Tf[] = area === "fiae" ? ["alle", "Teil 1", "Teil 2", "SoWi"] : ["alle", ...new Set(TOPICS.map((t) => t.teil as Tf))];
+  const filters: Tf[] = ["alle", "Teil 1", "Teil 2", "SoWi"];
   const groups = area === "fiae" ? GROUPS : FISI_GROUPS;
   const show = (t: Topic) => f === "alle" || (f === "SoWi" ? t.teil === "SoWi" : t.teil === f || ((f === "Teil 1" || f === "Teil 2") && t.teil === "Teil 1 + 2"));
   const kind = (k: Kind) => startRound(learnList(S, k, undefined, area));
@@ -132,8 +128,9 @@ function TopicPage({ t, area, catalog }: { t: Topic; area: "fiae" | "fisi"; cata
   const ttab = useLernenUI((s) => s.ttab), navigate = useNavigate(), startRound = useStartRound();
   const [addQ, setAddQ] = useState(false), [confirm, setConfirm] = useState<string | null>(null), [msg, setMsg] = useState("");
   const fRef = useRef<HTMLTextAreaElement>(null), bRef = useRef<HTMLTextAreaElement>(null), headRef = useRef<HTMLElement>(null);
-  const qs = topicQ(S, t.id, area), c = counts(S, qs), ueb = uebOf(t), dueN = dueCount(S, qs);
+  const qs = topicQ(S, t.id, area), c = counts(S, qs), dueN = dueCount(S, qs);
   const PK = Object.fromEntries(catalog.pakete.map((p) => [p.id, p]));
+  const ueb = area === "fisi" ? uebOf(t, PK, fisiUE) : uebOf(t);
   const theo = t.th.map((id) => PK[id]).filter(Boolean);
   const tab: TTab = !theo.length || (ttab === "aufgaben" && !ueb.length) ? "fragen" : ttab;
   useAnimRings(headRef, [t.id]);
@@ -206,7 +203,7 @@ function TopicPage({ t, area, catalog }: { t: Topic; area: "fiae" | "fisi"; cata
       )}
       {tab === "aufgaben" && (
         <div className="ueb-list">
-          {ueb.map((id) => <UebItem key={id} id={id} onOpen={(u) => { void navigate({ to: "/aufgaben", search: { u } }); window.scrollTo({ top: 0 }); }} />)}
+          {ueb.map((id) => <UebItem key={id} id={id} fisi={area === "fisi"} onOpen={(u) => { void navigate({ to: "/aufgaben", search: { u } }); window.scrollTo({ top: 0 }); }} />)}
         </div>
       )}
     </>

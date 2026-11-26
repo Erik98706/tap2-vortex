@@ -44,8 +44,8 @@ export function logCause(errlog: ErrEntry[], src: string, ref: string, pts: numb
 export const UEB: Aufgabe[] = TAP2.ueb;
 export const UE: Record<string, Aufgabe> = Object.fromEntries(UEB.map((u) => [u.id, u]));
 const PK = Object.fromEntries(TAP2.pakete.map((p) => [p.id, p]));
-/** Aufgaben eines Themas: aus seinen Lernpaketen, ohne Doppelte (t.ueb in der Live-App) */
-export const uebOf = (t: Topic) => [...new Set(t.th.flatMap((id) => (PK[id] ? PK[id].ueb ?? [] : [])))].filter((u) => UE[u]);
+/** Aufgaben eines Themas: aus seinen Lernpaketen, ohne Doppelte (t.ueb in der Live-App). Bei FISI: eigene Pakete und Aufgaben. */
+export const uebOf = (t: Topic, pk: Record<string, { ueb?: string[] }> = PK, lookup: Record<string, Aufgabe> = UE) => [...new Set(t.th.flatMap((id) => (pk[id] ? pk[id].ueb ?? [] : [])))].filter((u) => lookup[u]);
 /** Thema mit der Theorie zu einer Aufgabe: das erste Thema, das sie enthält (UEB_TOPIC) */
 export const UEB_TOPIC: Record<string, string> = {};
 TOPICS.forEach((t) => uebOf(t).forEach((u) => { if (!UEB_TOPIC[u]) UEB_TOPIC[u] = t.id; }));
@@ -69,9 +69,9 @@ export function saveUebRec(S: State, id: string, p: number, day = today()): Stat
   const r = S.ueb[id];
   return { ...S, ueb: { ...S.ueb, [id]: { p, at: day, n: (r?.n || 0) + 1 } } };
 }
-/** Ursache an der Aufgabe setzen bzw. bei erneutem Klick entfernen, mit Eintrag im Fehlerprotokoll */
-export function setUebCauseRec(S: State, id: string, c: Cause, day = today()): { S: State; ev: ErrEv } | null {
-  const u = UE[id], r = S.ueb[id];
+/** Ursache an der Aufgabe setzen bzw. bei erneutem Klick entfernen, mit Eintrag im Fehlerprotokoll (lookup: Aufgabenverzeichnis, bei FISI das eigene) */
+export function setUebCauseRec(S: State, id: string, c: Cause, day = today(), lookup: Record<string, Aufgabe> = UE): { S: State; ev: ErrEv } | null {
+  const u = lookup[id], r = S.ueb[id];
   if (!u || !r) return null;
   const cause = r.cause === c ? null : c;
   const { errlog, ev } = logCause(S.errlog, "ueb", u.id + " " + u.titel, u.max - r.p, cause, day);

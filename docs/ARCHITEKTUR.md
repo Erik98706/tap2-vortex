@@ -95,8 +95,19 @@ app/
   Die Netzberechnungen werden aus festen Datensätzen abgeleitet; Originalprüfungen und Lösungshinweise aus den
   bereitgestellten PDFs werden nicht veröffentlicht. `src/store/learning-area.ts` speichert die Auswahl lokal unter
   `tap2coach-bereich`. Der Fortschritt bleibt im kompatiblen Lernstand `tap2coach`; FISI-Fragen verwenden den eigenen
-  ID-Namensraum `fisi:`. Übersicht, Lernen, Suche und Lernplan folgen der Auswahl. FISI-Aufgaben, Prüfungssimulationen,
-  Events und Tutor sind noch nicht portiert und werden nicht mit FIAE-Inhalten aufgefüllt.
+  ID-Namensraum `fisi:`. Übersicht, Lernen, Suche und Lernplan folgen der Auswahl. Events und Tutor sind für FISI noch
+  nicht portiert und werden nicht mit FIAE-Inhalten aufgefüllt.
+- **FISI-Ausbau (26.11.2026):** Die Themen gehören zu den Prüfungsteilen Teil 1 (Konzeption und Administration von
+  IT-Systemen), Teil 2 (Analyse und Entwicklung von Netzwerken) und WiSo (`teil` im Thema; Übersicht, Filter und Lernplan
+  wie bei FIAE). Inhalte (alle eigenständig formuliert, Altklausuren nur als Themenvorlage, nichts davon im Repo):
+  Fragen je Thema in `src/content/fisi/netzwerk.ts` und `administration.ts`, Lernpakete (Theorie) in `pakete-netzwerk.ts`
+  und `pakete-admin.ts` (je Thema ein Paket, `th` im Thema), Szenario-Aufgaben in `aufgaben.ts` (je Teil vier à 25 P.,
+  IDs `FK1`–`FK4`, `FN1`–`FN4`). Prüfung: Real-Klausur (vier Aufgaben, 90 Min.) und Simulation (30 Auswahlfragen) je Teil,
+  Logik in `lib/fisi-pruefung.ts`, gemeinsame Teile in `lib/pruefung.ts` (`PkRun.area`, `teilInfo`). Punkte, Ergebnisse
+  und Fehlerprotokoll der FISI-Aufgaben und -Prüfungen liegen **getrennt** vom Lernstand `tap2coach` unter
+  `tap2coach-fisi` (`store/fisi-lernen.ts`), damit das Format v7 und die FIAE-Ergebnisse unberührt bleiben und die
+  Live-App keine unbekannten Prüfungsteile sieht. Antworten der Simulation zählen weiter im Lernstand. Noch offen: FISI-
+  Ergebnisse in Sicherung und Konto-Sync (siehe docs/MIGRATION.md), WiSo-Simulation, mehr Aufgaben je Kategorie.
 - **Prüfungstermin:** Auswahl Winter 2026/27 (25.11.2026), Sommer 2027 (28.04.2027) oder individuelles Einladungsdatum.
   Lokal gespeichert unter `tap2coach-pruefungstermin`; Countdown, Lernplan und Tutor-Lehrplan verwenden denselben Wert.
   Schriftliche Termine folgen AkA/IHK-IT-Terminen; Projekt- und Fachgesprächsdaten bleiben individuell.
