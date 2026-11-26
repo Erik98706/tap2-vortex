@@ -73,6 +73,15 @@ describe("Kataloge", () => {
     expect(teil["si-wiso"]).toBe("SoWi");
   });
 
+  it("neue FISI-Netzwerkthemen haben je mindestens 15 Fragen, Auswahlfragen und Karten mit Punkten", () => {
+    ["si-ipv6", "si-protokolle", "si-switching", "si-routing", "si-firewall", "si-diagnose"].forEach((id) => {
+      const qs = systemIntegration.questions.filter((q) => q.topic === id);
+      expect(qs.length, id).toBeGreaterThanOrEqual(15);
+      expect(qs.filter((q) => q.type === "mc").length, id).toBeGreaterThanOrEqual(9);
+      qs.filter((q) => q.type === "card").forEach((q) => expect(q.q, q.id).toMatch(/\(\d+ P\.\)$/));
+    });
+  });
+
   it("wechselt Katalogdaten, ohne den FIAE-Standard zu verändern", () => {
     expect(catalogFor().id).toBe("tap2-fiae");
     expect(catalogFor("fisi").id).toBe("tap2-fisi");
